@@ -2,23 +2,33 @@ package main
 
 import (
 	"fmt"
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
-func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params)  {
-	w.Header().Set("Content-Type", "text/html")
+func IndexHandler(w http.ResponseWriter, r *http.Request)  {
 	fmt.Fprintf(w, "This is homepage")
 }
 
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params)  {
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
+func GreetHandler(w http.ResponseWriter, r *http.Request)  {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	fmt.Fprintf(w, "Hello, %v", name)
+}
+
+func CustomNotFound(w http.ResponseWriter, r *http.Request)  {
+	fmt.Fprintf(w, "Could not find the page you're looking for ... ")
 }
 
 func main()  {
-	router := httprouter.New()
-	router.GET("/", Index)
-	router.GET("/hello/:name", Hello)
-	http.ListenAndServe(":3000", router)
+	r := mux.NewRouter()
+
+	var h http.Handler = http.HandlerFunc(CustomNotFound)
+
+	r.NotFoundHandler = h
+
+	r.HandleFunc("/", IndexHandler)
+	r.HandleFunc("/hello/{name}", GreetHandler)
+
+	http.ListenAndServe(":3000", r)
 }
