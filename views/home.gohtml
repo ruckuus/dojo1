@@ -1,2 +1,5 @@
-<h1>Welcome, home!</h1>
-{{template "footer"}}
+<h1>{{ .SiteName }}</h1>
+<p>
+    Welcome!
+</p>
+{{template "footer" .}}

@@ -3,16 +3,27 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"html/template"
+	"github.com/ruckuus/dojo1/views"
 	"net/http"
 )
 
-var homeTemplate *template.Template
-var contactusTemplate *template.Template
+var homeView *views.View
+var contactView *views.View
 
 func IndexHandler(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "text/html")
-	if err := homeTemplate.Execute(w, nil); err != nil {
+
+	data := struct {
+		SiteName string
+	}{"HomeButler"}
+	if err := homeView.Template.Execute(w, data); err != nil {
+		panic(err)
+	}
+}
+
+func ContactUsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	if err := contactView.Template.Execute(w, nil); err != nil {
 		panic(err)
 	}
 }
@@ -29,16 +40,8 @@ func CustomNotFound(w http.ResponseWriter, r *http.Request)  {
 
 func main()  {
 
-	var err error
-	homeTemplate, err = template.ParseFiles("views/home.gohtml","views/layouts/footer.gohtml")
-	if err != nil {
-		panic(err)
-	}
-
-	contactusTemplate, err = template.ParseFiles("views/contact.gohtml","views/layouts/footer.gohtml")
-	if err != nil {
-		panic(err)
-	}
+	homeView = views.NewView("views/home.gohtml")
+	contactView = views.NewView("views/contact.gohtml")
 
 	r := mux.NewRouter()
 
@@ -53,9 +56,3 @@ func main()  {
 	http.ListenAndServe(":3000", r)
 }
 
-func ContactUsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	if err := contactusTemplate.Execute(w, nil); err != nil {
-		panic(err)
-	}
-}
