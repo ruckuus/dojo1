@@ -61,7 +61,8 @@ func main()  {
 	r.HandleFunc("/", home)
 	r.HandleFunc("/contact", contact)
 	r.HandleFunc("/faq", faq)
-	r.HandleFunc("/signup", userC.New)
+	r.HandleFunc("/signup", userC.New).Methods("GET")
+	r.HandleFunc("/signup", userC.Create).Methods("POST")
 
 	http.ListenAndServe(":3000", r)
 }
