@@ -23,12 +23,11 @@ func layoutFiles() []string  {
 
 func NewView(layout string, files ...string) *View  {
 
-	var fullName []string
-	for _, f := range files {
-		fullName = append(fullName, TemplateDir + f + TemplateExt)
+	for i, f := range files {
+		files[i] = TemplateDir + f + TemplateExt
 	}
 
-	files = append(fullName, layoutFiles()... )
+	files = append(files, layoutFiles()... )
 	t, err := template.ParseFiles(files...)
 	if err != nil {
 		panic(err)
