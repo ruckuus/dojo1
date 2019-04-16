@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/ruckuus/dojo1/controllers"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
 )
@@ -11,7 +12,6 @@ var (
 	contactView *views.View
 	errorView *views.View
 	faqView *views.View
-	signupView *views.View
 )
 
 func home(w http.ResponseWriter, r *http.Request)  {
@@ -50,7 +50,7 @@ func main()  {
 	contactView = views.NewView("bootstrap", "views/contact.gohtml")
 	errorView = views.NewView("bootstrap", "views/error.gohtml")
 	faqView = views.NewView("bootstrap", "views/faq.gohtml")
-	signupView = views.NewView("bootstrap", "views/signup.gohtml")
+	userC := controllers.NewUsers()
 
 	r := mux.NewRouter()
 
@@ -61,14 +61,9 @@ func main()  {
 	r.HandleFunc("/", home)
 	r.HandleFunc("/contact", contact)
 	r.HandleFunc("/faq", faq)
-	r.HandleFunc("/signup", signup)
+	r.HandleFunc("/signup", userC.New)
 
 	http.ListenAndServe(":3000", r)
-}
-
-func signup(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	must(signupView.Render(w, nil))
 }
 
 func must(err error)  {
