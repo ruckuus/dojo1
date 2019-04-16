@@ -44,7 +44,7 @@ func main()  {
 	r.NotFoundHandler = h
 
 	r.HandleFunc("/", home)
-	r.HandleFunc("/contactus", contact)
+	r.HandleFunc("/contact", contact)
 
 	http.ListenAndServe(":3000", r)
 }
