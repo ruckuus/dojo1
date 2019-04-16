@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	LayoutDir = "views/layouts/"
+	TemplateDir = "views/"
+	LayoutDir = TemplateDir + "layouts/"
 	TemplateExt = ".gohtml"
 )
 
@@ -21,7 +22,13 @@ func layoutFiles() []string  {
 }
 
 func NewView(layout string, files ...string) *View  {
-	files = append(files, layoutFiles()... )
+
+	var fullName []string
+	for _, f := range files {
+		fullName = append(fullName, TemplateDir + f + TemplateExt)
+	}
+
+	files = append(fullName, layoutFiles()... )
 	t, err := template.ParseFiles(files...)
 	if err != nil {
 		panic(err)
