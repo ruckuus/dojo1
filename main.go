@@ -8,6 +8,7 @@ import (
 )
 
 var homeTemplate *template.Template
+var contactusTemplate *template.Template
 
 func IndexHandler(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "text/html")
@@ -34,6 +35,11 @@ func main()  {
 		panic(err)
 	}
 
+	contactusTemplate, err = template.ParseFiles("views/contact.gohtml")
+	if err != nil {
+		panic(err)
+	}
+
 	r := mux.NewRouter()
 
 	var h http.Handler = http.HandlerFunc(CustomNotFound)
@@ -42,6 +48,14 @@ func main()  {
 
 	r.HandleFunc("/", IndexHandler)
 	r.HandleFunc("/hello/{name}", GreetHandler)
+	r.HandleFunc("/contactus", ContactUsHandler)
 
 	http.ListenAndServe(":3000", r)
+}
+
+func ContactUsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	if err := contactusTemplate.Execute(w, nil); err != nil {
+		panic(err)
+	}
 }
