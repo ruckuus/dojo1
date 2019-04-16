@@ -10,28 +10,22 @@ import (
 var homeView *views.View
 var contactView *views.View
 
-func IndexHandler(w http.ResponseWriter, r *http.Request)  {
+func home(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "text/html")
 
 	data := struct {
 		SiteName string
 	}{"HomeButler"}
-	if err := homeView.Template.Execute(w, data); err != nil {
+	if err := homeView.Template.ExecuteTemplate(w, homeView.Layout, data); err != nil {
 		panic(err)
 	}
 }
 
-func ContactUsHandler(w http.ResponseWriter, r *http.Request) {
+func contact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	if err := contactView.Template.Execute(w, nil); err != nil {
+	if err := contactView.Template.ExecuteTemplate(w, contactView.Layout, nil); err != nil {
 		panic(err)
 	}
-}
-
-func GreetHandler(w http.ResponseWriter, r *http.Request)  {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	fmt.Fprintf(w, "Hello, %v", name)
 }
 
 func CustomNotFound(w http.ResponseWriter, r *http.Request)  {
@@ -40,8 +34,8 @@ func CustomNotFound(w http.ResponseWriter, r *http.Request)  {
 
 func main()  {
 
-	homeView = views.NewView("views/home.gohtml")
-	contactView = views.NewView("views/contact.gohtml")
+	homeView = views.NewView("bootstrap", "views/home.gohtml")
+	contactView = views.NewView("bootstrap", "views/contact.gohtml")
 
 	r := mux.NewRouter()
 
@@ -49,9 +43,8 @@ func main()  {
 
 	r.NotFoundHandler = h
 
-	r.HandleFunc("/", IndexHandler)
-	r.HandleFunc("/hello/{name}", GreetHandler)
-	r.HandleFunc("/contactus", ContactUsHandler)
+	r.HandleFunc("/", home)
+	r.HandleFunc("/contactus", contact)
 
 	http.ListenAndServe(":3000", r)
 }
