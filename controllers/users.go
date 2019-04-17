@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
 )
 
 type Users struct {
 	NewView *views.View
+	us      *models.UserService
 }
 
 type SignupForm struct {
@@ -15,9 +17,10 @@ type SignupForm struct {
 	Password string `schema:"password"`
 }
 
-func NewUsers() *Users {
+func NewUsers(us *models.UserService) *Users {
 	return &Users{
 		NewView: views.NewView("bootstrap", "users/new"),
+		us:      us,
 	}
 }
 
@@ -35,7 +38,13 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	p := SignupForm{}
 	err := parseForm(r, &p)
 
-	if err != nil {
-		panic(err)
+	user := models.User{
+		Name:  p.Name,
+		Email: p.Email,
+	}
+
+	if err = u.us.Create(&user); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }

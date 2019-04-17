@@ -1,14 +1,35 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/controllers"
+	"github.com/ruckuus/dojo1/models"
 	"net/http"
+)
+
+const (
+	host     = "localhost"
+	port     = 32769
+	user     = "lenslocked_db_user"
+	password = "db_Password123!"
+	db_name  = "lenslocked_db"
 )
 
 func main() {
 
-	userC := controllers.NewUsers()
+	// Prepare DB connection string
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, db_name)
+
+	us, err := models.NewUserService(psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer us.Close()
+	us.AutoMigrate()
+
+	userC := controllers.NewUsers(us)
 	staticC := controllers.NewStatic()
 	galleriesC := controllers.NewGalleries()
 
