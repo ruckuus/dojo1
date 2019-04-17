@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func main()  {
+func main() {
 
 	userC := controllers.NewUsers()
 	staticC := controllers.NewStatic()
@@ -23,4 +23,3 @@ func main()  {
 
 	http.ListenAndServe(":3000", r)
 }
-

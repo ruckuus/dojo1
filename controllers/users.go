@@ -1,17 +1,16 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
 )
 
-type Users struct{
+type Users struct {
 	NewView *views.View
 }
 
 type SignupForm struct {
-	Email string `schema:"email"`
+	Email    string `schema:"email"`
 	Password string `schema:"password"`
 }
 
@@ -38,7 +37,4 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Fprintln(w, "Email: %s", p.Email)
-	fmt.Fprintln(w, "Password: %s", p.Password)
 }
