@@ -1,9 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
 
@@ -70,15 +70,16 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	foundUser, err := u.us.ByEmail(form.Email)
-	if err != nil {
+	foundUser, err := u.us.Authenticate(form.Email, form.Password)
+
+	switch err {
+	case nil:
+		fmt.Fprintf(w, "Found user: +%v", foundUser)
+	case models.ErrNotFound:
 		http.Error(w, err.Error(), http.StatusNotFound)
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash),
-		[]byte(form.Password+models.UserPasswordPepper))
-
-	if err != nil {
+	case models.ErrInvalidPassword:
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	default:
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 }

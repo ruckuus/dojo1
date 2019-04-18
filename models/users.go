@@ -19,12 +19,13 @@ type UserService struct {
 	db *gorm.DB
 }
 
-var UserPasswordPepper = "HALUSINOGEN2019$$"
+var userPasswordPepper = "HALUSINOGEN2019$$"
 
 var (
 	//ErrNotFound is returned when a resource cannot be found
-	ErrNotFound  = errors.New("models: resource not found")
-	ErrInvalidID = errors.New("models: ID provided is invalid")
+	ErrNotFound        = errors.New("models: resource not found")
+	ErrInvalidID       = errors.New("models: ID provided is invalid")
+	ErrInvalidPassword = errors.New("models: incorrect password provided")
 )
 
 // NewUserService Create new UserService instance
@@ -47,9 +48,13 @@ func (us *UserService) Close() error {
 	return us.db.Close()
 }
 
+func preparePassword(password string) string {
+	return password + userPasswordPepper
+}
+
 // Create new record
 func (us *UserService) Create(user *User) error {
-	passwordRaw := []byte(user.Password + UserPasswordPepper)
+	passwordRaw := []byte(preparePassword(user.Password))
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(passwordRaw), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -78,6 +83,7 @@ func (us *UserService) ByID(id uint) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &user, nil
 }
 
@@ -113,6 +119,24 @@ func (us *UserService) AutoMigrate() error {
 		return err
 	}
 	return nil
+}
+
+// Authenticate will return error when password provided mismatch
+func (us *UserService) Authenticate(email, password string) (*User, error) {
+	foundUser, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(preparePassword(password)))
+	switch err {
+	case nil:
+		return foundUser, nil
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return nil, ErrInvalidPassword
+	default:
+		return nil, err
+	}
 }
 
 // DestructiveReset only used for development
