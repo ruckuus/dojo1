@@ -3,12 +3,14 @@ package controllers
 import (
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
 
 type Users struct {
-	NewView *views.View
-	us      *models.UserService
+	NewView   *views.View
+	LoginView *views.View
+	us        *models.UserService
 }
 
 type SignupForm struct {
@@ -17,10 +19,16 @@ type SignupForm struct {
 	Password string `schema:"password"`
 }
 
+type LoginForm struct {
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
+}
+
 func NewUsers(us *models.UserService) *Users {
 	return &Users{
-		NewView: views.NewView("bootstrap", "users/new"),
-		us:      us,
+		NewView:   views.NewView("bootstrap", "users/new"),
+		LoginView: views.NewView("bootstrap", "users/login"),
+		us:        us,
 	}
 }
 
@@ -38,13 +46,39 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	p := SignupForm{}
 	err := parseForm(r, &p)
 
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
 	user := models.User{
-		Name:  p.Name,
-		Email: p.Email,
+		Name:     p.Name,
+		Email:    p.Email,
+		Password: p.Password,
 	}
 
 	if err = u.us.Create(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
+	form := LoginForm{}
+	err := parseForm(r, &form)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	foundUser, err := u.us.ByEmail(form.Email)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash),
+		[]byte(form.Password+models.UserPasswordPepper))
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 }

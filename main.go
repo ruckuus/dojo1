@@ -40,6 +40,8 @@ func main() {
 	r.Handle("/faq", staticC.FAQ).Methods("GET")
 	r.HandleFunc("/signup", userC.New).Methods("GET")
 	r.HandleFunc("/signup", userC.Create).Methods("POST")
+	r.Handle("/login", userC.LoginView).Methods("GET")
+	r.HandleFunc("/login", userC.Login).Methods("POST")
 	r.HandleFunc("/galleries/new", galleriesC.New).Methods("GET")
 
 	http.ListenAndServe(":3000", r)

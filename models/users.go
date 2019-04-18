@@ -19,7 +19,7 @@ type UserService struct {
 	db *gorm.DB
 }
 
-var userPasswordPepper = "HALUSINOGEN2019$$"
+var UserPasswordPepper = "HALUSINOGEN2019$$"
 
 var (
 	//ErrNotFound is returned when a resource cannot be found
@@ -49,7 +49,7 @@ func (us *UserService) Close() error {
 
 // Create new record
 func (us *UserService) Create(user *User) error {
-	passwordRaw := []byte(user.Password + userPasswordPepper)
+	passwordRaw := []byte(user.Password + UserPasswordPepper)
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(passwordRaw), bcrypt.DefaultCost)
 	if err != nil {
 		return err
