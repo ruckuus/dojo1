@@ -42,6 +42,7 @@ func main() {
 	r.HandleFunc("/signup", userC.Create).Methods("POST")
 	r.Handle("/login", userC.LoginView).Methods("GET")
 	r.HandleFunc("/login", userC.Login).Methods("POST")
+	r.HandleFunc("/cookietest", userC.CookieTest).Methods("GET")
 	r.HandleFunc("/galleries/new", galleriesC.New).Methods("GET")
 
 	http.ListenAndServe(":3000", r)

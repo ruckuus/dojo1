@@ -4,6 +4,8 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pkg/errors"
+	"github.com/ruckuus/dojo1/hash"
+	"github.com/ruckuus/dojo1/rand"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,13 +15,17 @@ type User struct {
 	Email        string `gorm:"not null; unique_index"`
 	Password     string `gorm:"-"`
 	PasswordHash string `gorm:"not null"`
+	Remember     string `gorm:"-"`
+	RememberHash string `gorm:"not null, unique_index"`
 }
 
 type UserService struct {
-	db *gorm.DB
+	db   *gorm.DB
+	hmac hash.HMAC
 }
 
 var userPasswordPepper = "HALUSINOGEN2019$$"
+var userHMACSecretKey = "SuperSecret2019!$"
 
 var (
 	//ErrNotFound is returned when a resource cannot be found
@@ -38,8 +44,11 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 	// set Log
 	db.LogMode(true)
 
+	h := hash.NewHMAC(userHMACSecretKey)
+
 	return &UserService{
-		db: db,
+		db:   db,
+		hmac: h,
 	}, nil
 }
 
@@ -61,6 +70,17 @@ func (us *UserService) Create(user *User) error {
 	}
 	user.Password = ""
 	user.PasswordHash = string(hashedBytes)
+
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+	}
+
+	user.RememberHash = us.hmac.Hash(user.Remember)
+
 	return us.db.Create(user).Error
 }
 
@@ -98,8 +118,24 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+func (us *UserService) ByRemember(token string) (*User, error) {
+	var user User
+	hashedToken := us.hmac.Hash(token)
+
+	db := us.db.Where("remember_hash = ?", hashedToken)
+
+	err := first(db, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // Update will update the provided user with all the data in the provided user object
 func (us *UserService) Update(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = us.hmac.Hash(user.Remember)
+	}
 	return us.db.Save(&user).Error
 }
 

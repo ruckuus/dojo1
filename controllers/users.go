@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/ruckuus/dojo1/models"
+	"github.com/ruckuus/dojo1/rand"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
 )
@@ -60,6 +61,13 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	err = u.signIn(w, &user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/cookietest", http.StatusFound)
 }
 
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
@@ -72,14 +80,52 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 
 	foundUser, err := u.us.Authenticate(form.Email, form.Password)
 
-	switch err {
-	case nil:
-		fmt.Fprintf(w, "Found user: +%v", foundUser)
-	case models.ErrNotFound:
-		http.Error(w, err.Error(), http.StatusNotFound)
-	case models.ErrInvalidPassword:
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	default:
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err != nil {
+		switch err {
+		case models.ErrNotFound:
+			http.Error(w, err.Error(), http.StatusNotFound)
+		case models.ErrInvalidPassword:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		return
 	}
+
+	err = u.signIn(w, foundUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/cookietest", http.StatusFound)
+
+}
+
+func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+		err = u.us.Update(user)
+		if err != nil {
+			return err
+		}
+	}
+	cookie := http.Cookie{
+		Name:  "remember_token",
+		Value: user.Remember,
+	}
+	http.SetCookie(w, &cookie)
+	return nil
+}
+
+func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
+	cookie, _ := r.Cookie("remember_token")
+	user, err := u.us.ByRemember(cookie.Value)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+	fmt.Fprintf(w, "Found user: %+v", user)
 }
