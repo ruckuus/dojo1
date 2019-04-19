@@ -19,7 +19,12 @@ type User struct {
 	RememberHash string `gorm:"not null, unique_index"`
 }
 
-type UserService struct {
+type UserService interface {
+	Authenticate(email, password string) (*User, error)
+	UserDB
+}
+
+type userService struct {
 	UserDB
 }
 
@@ -70,24 +75,31 @@ type userValidator struct {
 
 var userPasswordPepper = "HALUSINOGEN2019$$"
 var userHMACSecretKey = "SuperSecret2019!$"
+
+// Check, it must error during compilation
 var _ UserDB = &userGorm{}
+var _ UserService = &userService{}
 
 var (
 	//ErrNotFound is returned when a resource cannot be found
-	ErrNotFound        = errors.New("models: resource not found")
-	ErrInvalidID       = errors.New("models: ID provided is invalid")
+	ErrNotFound = errors.New("models: resource not found")
+
+	//ErrInvalidID is returned when provided ID is invalid
+	ErrInvalidID = errors.New("models: ID provided is invalid")
+
+	//ErrInvalidPassword is returned when provided password is invalid
 	ErrInvalidPassword = errors.New("models: incorrect password provided")
 )
 
 // NewUserService Create new UserService instance
-func NewUserService(connectionInfo string) (*UserService, error) {
+func NewUserService(connectionInfo string) (UserService, error) {
 	ug, err := newUserGorm(connectionInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	return &UserService{
-		UserDB: userValidator{
+	return &userService{
+		UserDB: &userValidator{
 			UserDB: ug,
 		},
 	}, nil
@@ -218,7 +230,7 @@ func (ug *userGorm) AutoMigrate() error {
 }
 
 // Authenticate will return error when password provided mismatch
-func (us *UserService) Authenticate(email, password string) (*User, error) {
+func (us *userService) Authenticate(email, password string) (*User, error) {
 	foundUser, err := us.ByEmail(email)
 	if err != nil {
 		return nil, err
