@@ -91,6 +91,9 @@ var (
 
 	//ErrInvalidPassword is returned when provided password is invalid
 	ErrInvalidPassword = errors.New("models: incorrect password provided")
+
+	//ErrEmailRequired is returned with email field is not present
+	ErrEmailRequired = errors.New("models: email is required")
 )
 
 // NewUserService Create new UserService instance
@@ -237,6 +240,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 func (uv *userValidator) Create(user *User) error {
 
 	err := runUserValidationFunctions(user,
+		uv.requireEmail,
 		uv.normalizeEmail,
 		uv.bcryptPassword,
 		uv.setRememberIfUnset,
@@ -251,6 +255,7 @@ func (uv *userValidator) Create(user *User) error {
 // Update will update the provided user with all the data in the provided user object
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValidationFunctions(user,
+		uv.requireEmail,
 		uv.normalizeEmail,
 		uv.bcryptPassword,
 		uv.hmacRemember)
@@ -267,7 +272,10 @@ func (uv *userValidator) ByEmail(email string) (*User, error) {
 	var user User
 	user.Email = email
 
-	err := runUserValidationFunctions(&user, uv.normalizeEmail)
+	err := runUserValidationFunctions(&user,
+		uv.requireEmail,
+		uv.normalizeEmail)
+
 	if err != nil {
 		return nil, err
 	}
@@ -354,6 +362,13 @@ func (uv *userValidator) idGreaterThan(n uint) userValidationFn {
 func (uv *userValidator) normalizeEmail(user *User) error {
 	user.Email = strings.TrimSpace(user.Email)
 	user.Email = strings.ToLower(user.Email)
+	return nil
+}
+
+func (uv *userValidator) requireEmail(user *User) error {
+	if user.Email == "" {
+		return ErrEmailRequired
+	}
 	return nil
 }
 
