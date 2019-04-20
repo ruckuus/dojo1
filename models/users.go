@@ -7,6 +7,7 @@ import (
 	"github.com/ruckuus/dojo1/hash"
 	"github.com/ruckuus/dojo1/rand"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 type User struct {
@@ -236,6 +237,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 func (uv *userValidator) Create(user *User) error {
 
 	err := runUserValidationFunctions(user,
+		uv.normalizeEmail,
 		uv.bcryptPassword,
 		uv.setRememberIfUnset,
 		uv.hmacRemember)
@@ -249,6 +251,7 @@ func (uv *userValidator) Create(user *User) error {
 // Update will update the provided user with all the data in the provided user object
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValidationFunctions(user,
+		uv.normalizeEmail,
 		uv.bcryptPassword,
 		uv.hmacRemember)
 
@@ -257,6 +260,19 @@ func (uv *userValidator) Update(user *User) error {
 	}
 
 	return uv.UserDB.Update(user)
+}
+
+// ByEmail validate and normalize email address before passing it to UserDB
+func (uv *userValidator) ByEmail(email string) (*User, error) {
+	var user User
+	user.Email = email
+
+	err := runUserValidationFunctions(&user, uv.normalizeEmail)
+	if err != nil {
+		return nil, err
+	}
+
+	return uv.UserDB.ByEmail(user.Email)
 }
 
 // ByRemember find users record from database by remember token
@@ -333,6 +349,12 @@ func (uv *userValidator) idGreaterThan(n uint) userValidationFn {
 		}
 		return nil
 	})
+}
+
+func (uv *userValidator) normalizeEmail(user *User) error {
+	user.Email = strings.TrimSpace(user.Email)
+	user.Email = strings.ToLower(user.Email)
+	return nil
 }
 
 // userValidationFn accepts pointer to user, it returns error
