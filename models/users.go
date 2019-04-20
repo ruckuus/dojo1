@@ -24,10 +24,6 @@ type UserService interface {
 	UserDB
 }
 
-type userService struct {
-	UserDB
-}
-
 // UserDB is used to interact with the users database.
 //
 // For pretty much all single user queries:
@@ -59,11 +55,15 @@ type UserDB interface {
 	DestructiveReset() error
 }
 
+// userService
+type userService struct {
+	UserDB
+}
+
 // userGorm represents the database interaction layer
 // and implements UserDB inteface fully
 type userGorm struct {
-	db   *gorm.DB
-	hmac hash.HMAC
+	db *gorm.DB
 }
 
 // userValidator is our validation layer that validates
@@ -71,6 +71,7 @@ type userGorm struct {
 // UserDB in our interface chain.
 type userValidator struct {
 	UserDB
+	hmac hash.HMAC
 }
 
 var userPasswordPepper = "HALUSINOGEN2019$$"
@@ -98,9 +99,12 @@ func NewUserService(connectionInfo string) (UserService, error) {
 		return nil, err
 	}
 
+	hmac := hash.NewHMAC(userHMACSecretKey)
+
 	return &userService{
 		UserDB: &userValidator{
 			UserDB: ug,
+			hmac:   hmac,
 		},
 	}, nil
 }
@@ -115,11 +119,8 @@ func newUserGorm(connectionInfo string) (*userGorm, error) {
 	// set Log
 	db.LogMode(true)
 
-	h := hash.NewHMAC(userHMACSecretKey)
-
 	return &userGorm{
-		db:   db,
-		hmac: h,
+		db: db,
 	}, nil
 }
 
@@ -134,24 +135,6 @@ func preparePassword(password string) string {
 
 // Create new record
 func (ug *userGorm) Create(user *User) error {
-	passwordRaw := []byte(preparePassword(user.Password))
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(passwordRaw), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	user.Password = ""
-	user.PasswordHash = string(hashedBytes)
-
-	if user.Remember == "" {
-		token, err := rand.RememberToken()
-		if err != nil {
-			return err
-		}
-		user.Remember = token
-	}
-
-	user.RememberHash = ug.hmac.Hash(user.Remember)
-
 	return ug.db.Create(user).Error
 }
 
@@ -190,11 +173,10 @@ func (ug *userGorm) ByEmail(email string) (*User, error) {
 }
 
 // ByRemember find users record from database by remember token
-func (ug *userGorm) ByRemember(token string) (*User, error) {
+func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 	var user User
-	hashedToken := ug.hmac.Hash(token)
 
-	db := ug.db.Where("remember_hash = ?", hashedToken)
+	db := ug.db.Where("remember_hash = ?", rememberHash)
 
 	err := first(db, &user)
 	if err != nil {
@@ -205,9 +187,6 @@ func (ug *userGorm) ByRemember(token string) (*User, error) {
 
 // Update will update the provided user with all the data in the provided user object
 func (ug *userGorm) Update(user *User) error {
-	if user.Remember != "" {
-		user.RememberHash = ug.hmac.Hash(user.Remember)
-	}
 	return ug.db.Save(&user).Error
 }
 
@@ -229,6 +208,16 @@ func (ug *userGorm) AutoMigrate() error {
 	return nil
 }
 
+// DestructiveReset only used for development
+func (ug *userGorm) DestructiveReset() error {
+	err := ug.db.DropTableIfExists(&User{}).Error
+	if err != nil {
+		return err
+	}
+
+	return ug.AutoMigrate()
+}
+
 // Authenticate will return error when password provided mismatch
 func (us *userService) Authenticate(email, password string) (*User, error) {
 	foundUser, err := us.ByEmail(email)
@@ -247,12 +236,38 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 	}
 }
 
-// DestructiveReset only used for development
-func (ug *userGorm) DestructiveReset() error {
-	err := ug.db.DropTableIfExists(&User{}).Error
+func (uv *userValidator) Create(user *User) error {
+	passwordRaw := []byte(preparePassword(user.Password))
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(passwordRaw), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
+	user.Password = ""
+	user.PasswordHash = string(hashedBytes)
 
-	return ug.AutoMigrate()
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+	}
+
+	user.RememberHash = uv.hmac.Hash(user.Remember)
+	return uv.UserDB.Create(user)
+}
+
+// Update will update the provided user with all the data in the provided user object
+func (uv *userValidator) Update(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = uv.hmac.Hash(user.Remember)
+	}
+	return uv.UserDB.Update(user)
+}
+
+// User Validation + Normalization
+// ByRemember find users record from database by remember token
+func (uv *userValidator) ByRemember(token string) (*User, error) {
+	hashedToken := uv.hmac.Hash(token)
+	return uv.UserDB.ByRemember(hashedToken)
 }
