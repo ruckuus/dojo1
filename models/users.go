@@ -236,14 +236,11 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 	}
 }
 
+// Create will perform user validation before calling user creation function
 func (uv *userValidator) Create(user *User) error {
-	passwordRaw := []byte(preparePassword(user.Password))
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(passwordRaw), bcrypt.DefaultCost)
-	if err != nil {
+	if err := runUserValidationFunctions(user, uv.bcryptPassword); err != nil {
 		return err
 	}
-	user.Password = ""
-	user.PasswordHash = string(hashedBytes)
 
 	if user.Remember == "" {
 		token, err := rand.RememberToken()
@@ -259,6 +256,10 @@ func (uv *userValidator) Create(user *User) error {
 
 // Update will update the provided user with all the data in the provided user object
 func (uv *userValidator) Update(user *User) error {
+	if err := runUserValidationFunctions(user, uv.bcryptPassword); err != nil {
+		return err
+	}
+
 	if user.Remember != "" {
 		user.RememberHash = uv.hmac.Hash(user.Remember)
 	}
@@ -270,4 +271,36 @@ func (uv *userValidator) Update(user *User) error {
 func (uv *userValidator) ByRemember(token string) (*User, error) {
 	hashedToken := uv.hmac.Hash(token)
 	return uv.UserDB.ByRemember(hashedToken)
+}
+
+func (uv *userValidator) bcryptPassword(user *User) error {
+	// If password does not change, we do not need to hash it
+	if user.Password == "" {
+		return nil
+	}
+
+	passwordBytes := preparePassword(user.Password)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(passwordBytes), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = string(hashedBytes)
+	user.Password = ""
+	return nil
+}
+
+// userValidationFn accepts pointer to user, it returns error
+type userValidationFn func(user *User) error
+
+// runUserValidationFunctions takes user pointer and a list of
+// userValidationFn to be executed, error will be thrown or nil
+// for successful validation.
+func runUserValidationFunctions(user *User, fns ...userValidationFn) error {
+	for _, fn := range fns {
+		if err := fn(user); err != nil {
+			return err
+		}
+	}
+	return nil
 }
