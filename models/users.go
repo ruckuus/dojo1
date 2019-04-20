@@ -192,10 +192,6 @@ func (ug *userGorm) Update(user *User) error {
 
 // Delete will delete the record for the user
 func (ug *userGorm) Delete(id uint) error {
-	if id == 0 {
-		return ErrInvalidID
-	}
-
 	user := User{Model: gorm.Model{ID: id}}
 	return ug.db.Delete(&user).Error
 }
@@ -263,7 +259,6 @@ func (uv *userValidator) Update(user *User) error {
 	return uv.UserDB.Update(user)
 }
 
-// User Validation + Normalization
 // ByRemember find users record from database by remember token
 func (uv *userValidator) ByRemember(token string) (*User, error) {
 	user := User{
@@ -274,6 +269,19 @@ func (uv *userValidator) ByRemember(token string) (*User, error) {
 		return nil, err
 	}
 	return uv.UserDB.ByRemember(user.RememberHash)
+}
+
+func (uv *userValidator) Delete(id uint) error {
+	var user User
+	user.ID = id
+
+	err := runUserValidationFunctions(&user, uv.idGreaterThan(0))
+
+	if err != nil {
+		return err
+	}
+
+	return uv.UserDB.Delete(id)
 }
 
 // bcryptPassword normalize password input before used by DB layer
@@ -316,6 +324,15 @@ func (uv *userValidator) setRememberIfUnset(user *User) error {
 
 	user.Remember = token
 	return nil
+}
+
+func (uv *userValidator) idGreaterThan(n uint) userValidationFn {
+	return userValidationFn(func(user *User) error {
+		if user.ID <= n {
+			return ErrInvalidID
+		}
+		return nil
+	})
 }
 
 // userValidationFn accepts pointer to user, it returns error
