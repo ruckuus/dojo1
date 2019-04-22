@@ -8,11 +8,28 @@ import (
 
 var (
 	TemplateDir = "views/"
-	LayoutDir = TemplateDir + "layouts/"
+	LayoutDir   = TemplateDir + "layouts/"
 	TemplateExt = ".gohtml"
 )
 
-func layoutFiles() []string  {
+const (
+	AlertLvlError   = "error"
+	AlertLvlWarning = "warning"
+	AlertLvlInfo    = "info"
+	AlertLvlSuccess = "success"
+)
+
+type Data struct {
+	Alert *Alert
+	Yield interface{}
+}
+
+type Alert struct {
+	Level   string
+	Message string
+}
+
+func layoutFiles() []string {
 	files, err := filepath.Glob(LayoutDir + "*" + TemplateExt)
 	if err != nil {
 		panic(err)
@@ -21,13 +38,13 @@ func layoutFiles() []string  {
 	return files
 }
 
-func NewView(layout string, files ...string) *View  {
+func NewView(layout string, files ...string) *View {
 
 	for i, f := range files {
 		files[i] = TemplateDir + f + TemplateExt
 	}
 
-	files = append(files, layoutFiles()... )
+	files = append(files, layoutFiles()...)
 	t, err := template.ParseFiles(files...)
 	if err != nil {
 		panic(err)
@@ -35,20 +52,28 @@ func NewView(layout string, files ...string) *View  {
 
 	return &View{
 		Template: t,
-		Layout: layout,
+		Layout:   layout,
 	}
 }
 
 type View struct {
 	Template *template.Template
-	Layout string
+	Layout   string
 }
 
-func (v *View) Render(w http.ResponseWriter, data interface{}) error  {
+func (v *View) Render(w http.ResponseWriter, data interface{}) error {
+	w.Header().Set("Content-Type", "text/html")
+	switch data.(type) {
+	case Data:
+	default:
+		data = Data{
+			Yield: data,
+		}
+	}
 	return v.Template.ExecuteTemplate(w, v.Layout, data)
 }
 
-func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request)  {
+func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := v.Render(w, nil); err != nil {
 		panic(err)
 	}

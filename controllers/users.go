@@ -37,7 +37,17 @@ func NewUsers(us models.UserService) *Users {
 //
 // GET /signup
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-	if err := u.NewView.Render(w, nil); err != nil {
+	alert := views.Alert{
+		Level:   "success",
+		Message: "Successfully rendered dynamic alert",
+	}
+
+	data := views.Data{
+		Alert: &alert,
+		Yield: "Any data since it's an interface",
+	}
+
+	if err := u.NewView.Render(w, data); err != nil {
 		panic(err)
 	}
 }
