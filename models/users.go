@@ -102,6 +102,9 @@ var (
 
 	//ErrEmailTaken
 	ErrEmailTaken = errors.New("models: email is already taken")
+
+	// ErrPasswordTooShort
+	ErrPasswordTooShort = errors.New("models: password must be at least 8 characters")
 )
 
 // NewUserService Create new UserService instance
@@ -254,6 +257,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 func (uv *userValidator) Create(user *User) error {
 
 	err := runUserValidationFunctions(user,
+		uv.passwordMinLength,
 		uv.requireEmail,
 		uv.emailFormat,
 		uv.normalizeEmail,
@@ -271,6 +275,7 @@ func (uv *userValidator) Create(user *User) error {
 // Update will update the provided user with all the data in the provided user object
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValidationFunctions(user,
+		uv.passwordMinLength,
 		uv.requireEmail,
 		uv.emailFormat,
 		uv.normalizeEmail,
@@ -413,6 +418,18 @@ func (uv *userValidator) emailIsAvail(user *User) error {
 
 	if user.ID != existing.ID {
 		return ErrEmailTaken
+	}
+
+	return nil
+}
+
+func (uv *userValidator) passwordMinLength(user *User) error {
+	if user.Password == "" {
+		return nil
+	}
+
+	if len(user.Password) < 8 {
+		return ErrPasswordTooShort
 	}
 
 	return nil
