@@ -105,6 +105,9 @@ var (
 
 	// ErrPasswordTooShort
 	ErrPasswordTooShort = errors.New("models: password must be at least 8 characters")
+
+	// ErrPasswordRequired
+	ErrPasswordRequired = errors.New("modesl: password is required")
 )
 
 // NewUserService Create new UserService instance
@@ -258,6 +261,7 @@ func (uv *userValidator) Create(user *User) error {
 
 	err := runUserValidationFunctions(user,
 		uv.passwordMinLength,
+		uv.passwordIsRequired,
 		uv.requireEmail,
 		uv.emailFormat,
 		uv.normalizeEmail,
@@ -276,6 +280,7 @@ func (uv *userValidator) Create(user *User) error {
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValidationFunctions(user,
 		uv.passwordMinLength,
+		uv.passwordHashIsRequired,
 		uv.requireEmail,
 		uv.emailFormat,
 		uv.normalizeEmail,
@@ -432,6 +437,20 @@ func (uv *userValidator) passwordMinLength(user *User) error {
 		return ErrPasswordTooShort
 	}
 
+	return nil
+}
+
+func (uv *userValidator) passwordIsRequired(user *User) error {
+	if user.Password == "" {
+		return ErrPasswordRequired
+	}
+	return nil
+}
+
+func (uv *userValidator) passwordHashIsRequired(user *User) error {
+	if user.PasswordHash == "" {
+		return ErrPasswordRequired
+	}
 	return nil
 }
 
