@@ -18,6 +18,14 @@ func Bytes(n int) ([]byte, error) {
 	return b, nil
 }
 
+func NBytes(base64string string) (int, error) {
+	b, err := base64.URLEncoding.DecodeString(base64string)
+	if err != nil {
+		return -1, nil
+	}
+	return len(b), nil
+}
+
 // String will return base64 string of a byte slice
 // with the length of nBytes. It returns string and error.
 func String(nBytes int) (string, error) {

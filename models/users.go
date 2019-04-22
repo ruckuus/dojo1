@@ -107,7 +107,13 @@ var (
 	ErrPasswordTooShort = errors.New("models: password must be at least 8 characters")
 
 	// ErrPasswordRequired
-	ErrPasswordRequired = errors.New("modesl: password is required")
+	ErrPasswordRequired = errors.New("models: password is required")
+
+	//ErrRememberRequired
+	ErrRememberRequired = errors.New("models: remember token is required")
+
+	// ErrRememberTooShort
+	ErrRememberTooShort = errors.New("models: remember token must be at least 32 bytes")
 )
 
 // NewUserService Create new UserService instance
@@ -268,6 +274,7 @@ func (uv *userValidator) Create(user *User) error {
 		uv.emailIsAvail,
 		uv.bcryptPassword,
 		uv.setRememberIfUnset,
+		uv.rememberMinBytes,
 		uv.hmacRemember)
 	if err != nil {
 		return err
@@ -285,7 +292,8 @@ func (uv *userValidator) Update(user *User) error {
 		uv.emailFormat,
 		uv.normalizeEmail,
 		uv.bcryptPassword,
-		uv.hmacRemember)
+		uv.hmacRemember,
+		uv.rememberHashIsRequired)
 
 	if err != nil {
 		return err
@@ -450,6 +458,29 @@ func (uv *userValidator) passwordIsRequired(user *User) error {
 func (uv *userValidator) passwordHashIsRequired(user *User) error {
 	if user.PasswordHash == "" {
 		return ErrPasswordRequired
+	}
+	return nil
+}
+
+func (uv *userValidator) rememberMinBytes(user *User) error {
+	if user.Remember == "" {
+		return nil
+	}
+
+	n, err := rand.NBytes(user.Remember)
+	if err != nil {
+		return err
+	}
+
+	if n < 32 {
+		return ErrRememberTooShort
+	}
+	return nil
+}
+
+func (uv *userValidator) rememberHashIsRequired(user *User) error {
+	if user.RememberHash == "" {
+		return ErrRememberRequired
 	}
 	return nil
 }
