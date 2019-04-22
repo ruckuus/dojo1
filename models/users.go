@@ -99,6 +99,9 @@ var (
 
 	//ErrEmailInvalid
 	ErrEmailInvalid = errors.New("models: email address is not valid")
+
+	//ErrEmailTaken
+	ErrEmailTaken = errors.New("models: email is already taken")
 )
 
 // NewUserService Create new UserService instance
@@ -254,6 +257,7 @@ func (uv *userValidator) Create(user *User) error {
 		uv.requireEmail,
 		uv.emailFormat,
 		uv.normalizeEmail,
+		uv.emailIsAvail,
 		uv.bcryptPassword,
 		uv.setRememberIfUnset,
 		uv.hmacRemember)
@@ -392,6 +396,23 @@ func (uv *userValidator) emailFormat(user *User) error {
 
 	if !uv.emailRegex.MatchString(user.Email) {
 		return ErrEmailInvalid
+	}
+
+	return nil
+}
+
+func (uv *userValidator) emailIsAvail(user *User) error {
+	existing, err := uv.ByEmail(user.Email)
+	if err == ErrNotFound {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if user.ID != existing.ID {
+		return ErrEmailTaken
 	}
 
 	return nil
