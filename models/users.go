@@ -7,6 +7,7 @@ import (
 	"github.com/ruckuus/dojo1/hash"
 	"github.com/ruckuus/dojo1/rand"
 	"golang.org/x/crypto/bcrypt"
+	"regexp"
 	"strings"
 )
 
@@ -72,7 +73,8 @@ type userGorm struct {
 // UserDB in our interface chain.
 type userValidator struct {
 	UserDB
-	hmac hash.HMAC
+	hmac       hash.HMAC
+	emailRegex *regexp.Regexp
 }
 
 var userPasswordPepper = "HALUSINOGEN2019$$"
@@ -86,14 +88,17 @@ var (
 	//ErrNotFound is returned when a resource cannot be found
 	ErrNotFound = errors.New("models: resource not found")
 
-	//ErrInvalidID is returned when provided ID is invalid
-	ErrInvalidID = errors.New("models: ID provided is invalid")
+	//ErrIDInvalid is returned when provided ID is invalid
+	ErrIDInvalid = errors.New("models: ID provided is invalid")
 
 	//ErrInvalidPassword is returned when provided password is invalid
-	ErrInvalidPassword = errors.New("models: incorrect password provided")
+	ErrPasswordInvalid = errors.New("models: incorrect password provided")
 
 	//ErrEmailRequired is returned with email field is not present
 	ErrEmailRequired = errors.New("models: email is required")
+
+	//ErrEmailInvalid
+	ErrEmailInvalid = errors.New("models: email address is not valid")
 )
 
 // NewUserService Create new UserService instance
@@ -104,13 +109,19 @@ func NewUserService(connectionInfo string) (UserService, error) {
 	}
 
 	hmac := hash.NewHMAC(userHMACSecretKey)
+	uv := newUserValidator(ug, hmac)
 
 	return &userService{
-		UserDB: &userValidator{
-			UserDB: ug,
-			hmac:   hmac,
-		},
+		UserDB: uv,
 	}, nil
+}
+
+func newUserValidator(udb UserDB, hmac hash.HMAC) *userValidator {
+	return &userValidator{
+		UserDB:     udb,
+		hmac:       hmac,
+		emailRegex: regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,16}$`),
+	}
 }
 
 // newUserGorm Create new userGorm instance
@@ -230,7 +241,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 	case nil:
 		return foundUser, nil
 	case bcrypt.ErrMismatchedHashAndPassword:
-		return nil, ErrInvalidPassword
+		return nil, ErrPasswordInvalid
 	default:
 		return nil, err
 	}
@@ -241,6 +252,7 @@ func (uv *userValidator) Create(user *User) error {
 
 	err := runUserValidationFunctions(user,
 		uv.requireEmail,
+		uv.emailFormat,
 		uv.normalizeEmail,
 		uv.bcryptPassword,
 		uv.setRememberIfUnset,
@@ -256,6 +268,7 @@ func (uv *userValidator) Create(user *User) error {
 func (uv *userValidator) Update(user *User) error {
 	err := runUserValidationFunctions(user,
 		uv.requireEmail,
+		uv.emailFormat,
 		uv.normalizeEmail,
 		uv.bcryptPassword,
 		uv.hmacRemember)
@@ -353,7 +366,7 @@ func (uv *userValidator) setRememberIfUnset(user *User) error {
 func (uv *userValidator) idGreaterThan(n uint) userValidationFn {
 	return userValidationFn(func(user *User) error {
 		if user.ID <= n {
-			return ErrInvalidID
+			return ErrIDInvalid
 		}
 		return nil
 	})
@@ -369,6 +382,18 @@ func (uv *userValidator) requireEmail(user *User) error {
 	if user.Email == "" {
 		return ErrEmailRequired
 	}
+	return nil
+}
+
+func (uv *userValidator) emailFormat(user *User) error {
+	if user.Email == "" {
+		return nil
+	}
+
+	if !uv.emailRegex.MatchString(user.Email) {
+		return ErrEmailInvalid
+	}
+
 	return nil
 }
 

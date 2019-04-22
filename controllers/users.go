@@ -84,7 +84,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case models.ErrNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
-		case models.ErrInvalidPassword:
+		case models.ErrPasswordInvalid:
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, err.Error(), http.StatusBadRequest)
