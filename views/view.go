@@ -13,10 +13,12 @@ var (
 )
 
 const (
-	AlertLvlError   = "error"
+	AlertLvlError   = "danger"
 	AlertLvlWarning = "warning"
 	AlertLvlInfo    = "info"
 	AlertLvlSuccess = "success"
+
+	AlertMsgGeneric = "Something went wrong. Please try again, and contact us if problem persists."
 )
 
 type Data struct {

@@ -5,6 +5,7 @@ import (
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/rand"
 	"github.com/ruckuus/dojo1/views"
+	"log"
 	"net/http"
 )
 
@@ -37,28 +38,26 @@ func NewUsers(us models.UserService) *Users {
 //
 // GET /signup
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-	alert := views.Alert{
-		Level:   "success",
-		Message: "Successfully rendered dynamic alert",
-	}
-
-	data := views.Data{
-		Alert: &alert,
-		Yield: "Any data since it's an interface",
-	}
-
-	if err := u.NewView.Render(w, data); err != nil {
+	if err := u.NewView.Render(w, nil); err != nil {
 		panic(err)
 	}
 }
 
 // New is used to create a new user
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
 	p := SignupForm{}
 	err := parseForm(r, &p)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		vd.Alert = &views.Alert{
+			Level:   views.AlertLvlError,
+			Message: views.AlertMsgGeneric,
+		}
+		u.NewView.Render(w, vd)
+		return
 	}
 
 	user := models.User{
@@ -68,13 +67,22 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = u.us.Create(&user); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		vd.Alert = &views.Alert{
+			Level:   views.AlertLvlError,
+			Message: err.Error(),
+		}
+		u.NewView.Render(w, vd)
 		return
 	}
 
 	err = u.signIn(w, &user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		vd.Alert = &views.Alert{
+			Level:   views.AlertLvlError,
+			Message: err.Error(),
+		}
+		u.NewView.Render(w, vd)
 		return
 	}
 	http.Redirect(w, r, "/cookietest", http.StatusFound)
