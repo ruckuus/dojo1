@@ -22,14 +22,16 @@ func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, db_name)
 
-	us, err := models.NewUserService(psqlInfo)
+	svcs, err := models.NewServices(psqlInfo)
+
 	if err != nil {
 		panic(err)
 	}
-	defer us.Close()
-	us.AutoMigrate()
 
-	userC := controllers.NewUsers(us)
+	defer svcs.User.Close()
+	svcs.User.AutoMigrate()
+
+	userC := controllers.NewUsers(svcs.User)
 	staticC := controllers.NewStatic()
 	galleriesC := controllers.NewGalleries()
 
