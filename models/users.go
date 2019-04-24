@@ -3,7 +3,6 @@ package models
 import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/pkg/errors"
 	"github.com/ruckuus/dojo1/hash"
 	"github.com/ruckuus/dojo1/rand"
 	"golang.org/x/crypto/bcrypt"
@@ -77,6 +76,20 @@ type userValidator struct {
 	emailRegex *regexp.Regexp
 }
 
+type modelError string
+
+func (e modelError) Error() string {
+	return string(e)
+}
+
+func (e modelError) Public() string {
+	s := strings.Replace(string(e), "models: ", "", 1)
+	split := strings.Split(s, " ")
+	split[0] = strings.Title(split[0])
+
+	return strings.Join(split, " ")
+}
+
 var userPasswordPepper = "HALUSINOGEN2019$$"
 var userHMACSecretKey = "SuperSecret2019!$"
 
@@ -86,34 +99,34 @@ var _ UserService = &userService{}
 
 var (
 	//ErrNotFound is returned when a resource cannot be found
-	ErrNotFound = errors.New("models: resource not found")
+	ErrNotFound modelError = "models: resource not found"
 
 	//ErrIDInvalid is returned when provided ID is invalid
-	ErrIDInvalid = errors.New("models: ID provided is invalid")
+	ErrIDInvalid modelError = "models: ID provided is invalid"
 
 	//ErrInvalidPassword is returned when provided password is invalid
-	ErrPasswordInvalid = errors.New("models: incorrect password provided")
+	ErrPasswordInvalid modelError = "models: incorrect password provided"
 
 	//ErrEmailRequired is returned with email field is not present
-	ErrEmailRequired = errors.New("models: email is required")
+	ErrEmailRequired modelError = "models: email is required"
 
 	//ErrEmailInvalid
-	ErrEmailInvalid = errors.New("models: email address is not valid")
+	ErrEmailInvalid modelError = "models: email address is not valid"
 
 	//ErrEmailTaken
-	ErrEmailTaken = errors.New("models: email is already taken")
+	ErrEmailTaken modelError = "models: email is already taken"
 
 	// ErrPasswordTooShort
-	ErrPasswordTooShort = errors.New("models: password must be at least 8 characters")
+	ErrPasswordTooShort modelError = "models: password must be at least 8 characters"
 
 	// ErrPasswordRequired
-	ErrPasswordRequired = errors.New("models: password is required")
+	ErrPasswordRequired modelError = "models: password is required"
 
 	//ErrRememberRequired
-	ErrRememberRequired = errors.New("models: remember token is required")
+	ErrRememberRequired modelError = "models: remember token is required"
 
 	// ErrRememberTooShort
-	ErrRememberTooShort = errors.New("models: remember token must be at least 32 bytes")
+	ErrRememberTooShort modelError = "models: remember token must be at least 32 bytes"
 )
 
 // NewUserService Create new UserService instance

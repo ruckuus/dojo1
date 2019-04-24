@@ -10,9 +10,9 @@ import (
 
 const (
 	host     = "localhost"
-	port     = 32769
-	user     = "lenslocked_db_user"
-	password = "db_Password123!"
+	port     = 54320
+	user     = "lenslocked_user"
+	password = "lenslocked_password"
 	db_name  = "lenslocked_db"
 )
 

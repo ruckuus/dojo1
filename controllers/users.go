@@ -5,7 +5,6 @@ import (
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/rand"
 	"github.com/ruckuus/dojo1/views"
-	"log"
 	"net/http"
 )
 
@@ -51,11 +50,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	err := parseForm(r, &p)
 
 	if err != nil {
-		log.Println(err)
-		vd.Alert = &views.Alert{
-			Level:   views.AlertLvlError,
-			Message: views.AlertMsgGeneric,
-		}
+		vd.SetAlert(err)
 		u.NewView.Render(w, vd)
 		return
 	}
@@ -67,11 +62,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = u.us.Create(&user); err != nil {
-		log.Println(err)
-		vd.Alert = &views.Alert{
-			Level:   views.AlertLvlError,
-			Message: err.Error(),
-		}
+		vd.SetAlert(err)
 		u.NewView.Render(w, vd)
 		return
 	}
@@ -85,11 +76,14 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
 	form := LoginForm{}
 	err := parseForm(r, &form)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		vd.SetAlert(err)
+		u.NewView.Render(w, vd)
+		return
 	}
 
 	foundUser, err := u.us.Authenticate(form.Email, form.Password)
@@ -97,18 +91,26 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case models.ErrNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
+			vd.Alert = &views.Alert{
+				Level:   views.AlertLvlError,
+				Message: "No such user with that email address.",
+			}
 		case models.ErrPasswordInvalid:
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			vd.Alert = &views.Alert{
+				Level:   views.AlertLvlError,
+				Message: "Password is incorrect.",
+			}
 		default:
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			vd.SetAlert(err)
 		}
+		u.LoginView.Render(w, vd)
 		return
 	}
 
 	err = u.signIn(w, foundUser)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		vd.SetAlert(err)
+		u.LoginView.Render(w, vd)
 		return
 	}
 	http.Redirect(w, r, "/cookietest", http.StatusFound)
