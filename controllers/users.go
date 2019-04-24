@@ -78,11 +78,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 
 	err = u.signIn(w, &user)
 	if err != nil {
-		vd.Alert = &views.Alert{
-			Level:   views.AlertLvlError,
-			Message: err.Error(),
-		}
-		u.NewView.Render(w, vd)
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	http.Redirect(w, r, "/cookietest", http.StatusFound)
