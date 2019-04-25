@@ -28,8 +28,8 @@ func main() {
 		panic(err)
 	}
 
-	defer svcs.User.Close()
-	svcs.User.AutoMigrate()
+	defer svcs.Close()
+	svcs.AutoMigrate()
 
 	userC := controllers.NewUsers(svcs.User)
 	staticC := controllers.NewStatic()
