@@ -22,30 +22,38 @@ func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, db_name)
 
-	svcs, err := models.NewServices(psqlInfo)
+	services, err := models.NewServices(psqlInfo)
 
 	if err != nil {
 		panic(err)
 	}
 
-	defer svcs.Close()
-	svcs.AutoMigrate()
+	defer services.Close()
+	services.AutoMigrate()
 
-	userC := controllers.NewUsers(svcs.User)
+	userC := controllers.NewUsers(services.User)
 	staticC := controllers.NewStatic()
-	galleriesC := controllers.NewGalleries()
+	galleriesC := controllers.NewGalleries(services.Gallery)
 
 	r := mux.NewRouter()
+
+	// Static router
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
 	r.Handle("/faq", staticC.FAQ).Methods("GET")
+
+	// User router
+
 	r.HandleFunc("/signup", userC.New).Methods("GET")
 	r.HandleFunc("/signup", userC.Create).Methods("POST")
 	r.Handle("/login", userC.LoginView).Methods("GET")
 	r.HandleFunc("/login", userC.Login).Methods("POST")
 	r.HandleFunc("/cookietest", userC.CookieTest).Methods("GET")
+
+	// Gallery router
 	r.HandleFunc("/galleries/new", galleriesC.New).Methods("GET")
+	r.HandleFunc("/galleries", galleriesC.Create).Methods("POST")
 
 	http.ListenAndServe(":3000", r)
 }
