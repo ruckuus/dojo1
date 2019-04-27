@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
@@ -38,7 +37,8 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	gallery := models.Gallery{
-		Title: form.Title,
+		UserID: 100, // Hardcoded for now
+		Title:  form.Title,
 	}
 
 	if err := g.gs.Create(&gallery); err != nil {
@@ -47,6 +47,7 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Successfully created")
-
+	vd.SetSuccessMessage("Successfully created gallery.")
+	g.NewView.Render(w, vd)
+	return
 }

@@ -54,6 +54,13 @@ func (d *Data) SetAlert(err error) {
 	}
 }
 
+func (d *Data) SetSuccessMessage(message string) {
+	d.Alert = &Alert{
+		Level:   AlertLvlSuccess,
+		Message: message,
+	}
+}
+
 func layoutFiles() []string {
 	files, err := filepath.Glob(LayoutDir + "*" + TemplateExt)
 	if err != nil {
