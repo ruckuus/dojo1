@@ -12,6 +12,7 @@ import (
 type Galleries struct {
 	NewView  *views.View
 	ShowView *views.View
+	EditView *views.View
 	gs       models.GalleryService
 	r        *mux.Router
 }
@@ -22,12 +23,14 @@ type GalleryForm struct {
 
 const (
 	ShowGallery = "show_gallery"
+	EditGallery = "edit_gallery"
 )
 
 func NewGalleries(services models.GalleryService, r *mux.Router) *Galleries {
 	return &Galleries{
 		NewView:  views.NewView("bootstrap", "galleries/new"),
 		ShowView: views.NewView("bootstrap", "galleries/show"),
+		EditView: views.NewView("bootstrap", "galleries/edit"),
 		gs:       services,
 		r:        r,
 	}
@@ -71,32 +74,56 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 func (g *Galleries) Show(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		return
+	}
+	vd.Yield = gallery
+
+	g.ShowView.Render(w, vd)
+}
+
+func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models.Gallery, error) {
+
 	vars := mux.Vars(r)
 
 	idStr := vars["id"]
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		vd.SetAlert(err)
-		g.ShowView.Render(w, vd)
-		return
+		return nil, err
 	}
-
-	_ = id
 
 	gallery, err := g.gs.ByID(uint(id))
 	if err != nil {
 		switch err {
 		case models.ErrNotFound:
-			vd.SetAlert(err)
+			http.Error(w, "Gallery not found", http.StatusNotFound)
 		default:
 			http.Error(w, "Internal server error.", http.StatusInternalServerError)
 		}
-		g.ShowView.Render(w, vd)
+		return nil, err
+	}
+	return gallery, nil
+}
+
+// /galleries/:ID/update
+func (g *Galleries) Edit(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
 		return
 	}
+
+	// Find the user
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "You do not have permission to access this gallery.", http.StatusForbidden)
+		return
+	}
+
 	vd.Yield = gallery
 
-	g.ShowView.Render(w, vd)
-
+	g.EditView.Render(w, vd)
 }
