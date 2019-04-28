@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/controllers"
+	"github.com/ruckuus/dojo1/middleware"
 	"github.com/ruckuus/dojo1/models"
 	"net/http"
 )
@@ -31,9 +32,18 @@ func main() {
 	defer services.Close()
 	services.AutoMigrate()
 
+	// Middleware
+
+	requireUserMw := middleware.RequireUser{
+		UserService: services.User,
+	}
+
 	userC := controllers.NewUsers(services.User)
 	staticC := controllers.NewStatic()
 	galleriesC := controllers.NewGalleries(services.Gallery)
+
+	newGallery := requireUserMw.Apply(galleriesC.NewView)
+	createGallery := requireUserMw.ApplyFn(galleriesC.Create)
 
 	r := mux.NewRouter()
 
@@ -52,8 +62,8 @@ func main() {
 	r.HandleFunc("/cookietest", userC.CookieTest).Methods("GET")
 
 	// Gallery router
-	r.HandleFunc("/galleries/new", galleriesC.New).Methods("GET")
-	r.HandleFunc("/galleries", galleriesC.Create).Methods("POST")
+	r.Handle("/galleries/new", newGallery).Methods("GET")
+	r.HandleFunc("/galleries", createGallery).Methods("POST")
 
 	http.ListenAndServe(":3000", r)
 }

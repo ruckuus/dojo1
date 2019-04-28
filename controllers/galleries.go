@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/ruckuus/dojo1/context"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
@@ -30,6 +31,8 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 	var form GalleryForm
 
+	user := context.User(r.Context())
+
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlert(err)
 		g.NewView.Render(w, vd)
@@ -37,7 +40,7 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	gallery := models.Gallery{
-		UserID: 100, // Hardcoded for now
+		UserID: user.ID, // Hardcoded for now
 		Title:  form.Title,
 	}
 
