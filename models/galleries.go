@@ -28,6 +28,7 @@ type galleryValidator struct {
 }
 
 type GalleryDB interface {
+	ByID(id uint) (*Gallery, error)
 	Create(gallery *Gallery) error
 }
 
@@ -50,6 +51,16 @@ func NewGalleryService(db *gorm.DB) GalleryService {
 
 func (gg *galleryGorm) Create(gallery *Gallery) error {
 	return gg.db.Create(gallery).Error
+}
+
+func (gg *galleryGorm) ByID(id uint) (*Gallery, error) {
+	var foundGallery Gallery
+	db := gg.db.Where("id = ?", id)
+	err := first(db, &foundGallery)
+	if err != nil {
+		return nil, err
+	}
+	return &foundGallery, nil
 }
 
 // Validations

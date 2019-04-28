@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/context"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
+	"strconv"
 )
 
 type Galleries struct {
@@ -55,4 +57,37 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	vd.SetSuccessMessage("Successfully created gallery.")
 	g.NewView.Render(w, vd)
 	return
+}
+
+func (g *Galleries) Show(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
+	vars := mux.Vars(r)
+
+	idStr := vars["id"]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		vd.SetAlert(err)
+		g.ShowView.Render(w, vd)
+		return
+	}
+
+	_ = id
+
+	gallery, err := g.gs.ByID(uint(id))
+	if err != nil {
+		switch err {
+		case models.ErrNotFound:
+			vd.SetAlert(err)
+		default:
+			http.Error(w, "Internal server error.", http.StatusInternalServerError)
+		}
+		g.ShowView.Render(w, vd)
+		return
+	}
+	vd.Yield = gallery
+
+	g.ShowView.Render(w, vd)
+
 }
