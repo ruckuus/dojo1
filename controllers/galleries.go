@@ -22,8 +22,10 @@ type GalleryForm struct {
 }
 
 const (
-	ShowGallery = "show_gallery"
-	EditGallery = "edit_gallery"
+	ShowGallery   = "show_gallery"
+	EditGallery   = "edit_gallery"
+	UpdateGallery = "update_gallery"
+	DeleteGallery = "delete_gallery"
 )
 
 func NewGalleries(services models.GalleryService, r *mux.Router) *Galleries {
@@ -125,5 +127,70 @@ func (g *Galleries) Edit(w http.ResponseWriter, r *http.Request) {
 
 	vd.Yield = gallery
 
+	g.EditView.Render(w, vd)
+}
+
+func (g *Galleries) Update(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		http.Error(w, "Error updating gallery", http.StatusBadRequest)
+		return
+	}
+
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Error updating gallery, user mismatch", http.StatusForbidden)
+		return
+	}
+
+	var vd views.Data
+	vd.Yield = gallery
+
+	var form GalleryForm
+	if err := parseForm(r, &form); err != nil {
+		vd.SetAlert(err)
+		g.EditView.Render(w, vd)
+		return
+	}
+
+	gallery.Title = form.Title
+
+	err = g.gs.Update(gallery)
+	if err != nil {
+		vd.SetAlert(err)
+		g.EditView.Render(w, vd)
+		return
+	}
+
+	vd.SetSuccessMessage("Gallery updated successfully")
+
+	g.EditView.Render(w, vd)
+}
+
+func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r)
+
+	if err != nil {
+		http.Error(w, "Error deleting gallery", http.StatusBadRequest)
+		return
+	}
+
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Error deleting gallery, user mismatch", http.StatusForbidden)
+		return
+	}
+
+	var vd views.Data
+	err = g.gs.Delete(gallery.ID)
+
+	if err != nil {
+		vd.SetAlert(err)
+		vd.Yield = gallery
+		g.EditView.Render(w, vd)
+		return
+	}
+
+	vd.SetSuccessMessage("Successfully deleted gallery")
 	g.EditView.Render(w, vd)
 }
