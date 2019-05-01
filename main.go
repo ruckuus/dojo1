@@ -36,9 +36,10 @@ func main() {
 
 	// Middleware
 
-	requireUserMw := middleware.RequireUser{
+	userMw := middleware.User{
 		UserService: services.User,
 	}
+	requireUserMw := middleware.RequireUser{}
 
 	userC := controllers.NewUsers(services.User)
 	staticC := controllers.NewStatic()
@@ -80,5 +81,6 @@ func main() {
 		Methods("POST").
 		Name(controllers.DeleteGallery)
 
-	http.ListenAndServe(":3000", r)
+	// userMw.Apply(r) lets User Middleware to execute before the routes
+	http.ListenAndServe(":3000", userMw.Apply(r))
 }
