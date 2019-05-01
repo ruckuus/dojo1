@@ -1,5 +1,5 @@
 {{define "yield"}}
-    {{template "index_galleries" .}}
+        {{template "index_galleries" .}}
 {{end}}
 
 {{define "index_galleries"}}
@@ -24,6 +24,10 @@
                     <a href="/galleries/{{.ID}}/edit">Edit</a>
                 </td>
             </tr>
+        {{else}}
+            <a href="/galleries/new" class="btn btn-primary">
+                New Gallery
+            </a>
         {{end}}
         </tbody>
     </table>

@@ -63,12 +63,22 @@ func main() {
 
 	// Gallery router
 	r.Handle("/galleries/new", newGallery).Methods("GET")
-	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Index)).Methods("GET")
 	r.HandleFunc("/galleries", createGallery).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name(controllers.ShowGallery)
-	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleriesC.Edit)).Methods("GET").Name(controllers.EditGallery)
-	r.HandleFunc("/galleries/{id:[0-9]+}/update", requireUserMw.ApplyFn(galleriesC.Update)).Methods("POST").Name(controllers.UpdateGallery)
-	r.HandleFunc("/galleries/{id:[0-9]+}/delete", requireUserMw.ApplyFn(galleriesC.Delete)).Methods("POST").Name(controllers.DeleteGallery)
+	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).
+		Methods("GET").
+		Name(controllers.ShowGallery)
+	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Index)).
+		Methods("GET").
+		Name(controllers.IndexGalleries)
+	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleriesC.Edit)).
+		Methods("GET").
+		Name(controllers.EditGallery)
+	r.HandleFunc("/galleries/{id:[0-9]+}/update", requireUserMw.ApplyFn(galleriesC.Update)).
+		Methods("POST").
+		Name(controllers.UpdateGallery)
+	r.HandleFunc("/galleries/{id:[0-9]+}/delete", requireUserMw.ApplyFn(galleriesC.Delete)).
+		Methods("POST").
+		Name(controllers.DeleteGallery)
 
 	http.ListenAndServe(":3000", r)
 }

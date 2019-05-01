@@ -23,10 +23,11 @@ type GalleryForm struct {
 }
 
 const (
-	ShowGallery   = "show_gallery"
-	EditGallery   = "edit_gallery"
-	UpdateGallery = "update_gallery"
-	DeleteGallery = "delete_gallery"
+	ShowGallery    = "show_gallery"
+	EditGallery    = "edit_gallery"
+	UpdateGallery  = "update_gallery"
+	DeleteGallery  = "delete_gallery"
+	IndexGalleries = "index_galleries"
 )
 
 func NewGalleries(services models.GalleryService, r *mux.Router) *Galleries {
@@ -66,7 +67,7 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 		g.NewView.Render(w, vd)
 		return
 	}
-	url, err := g.r.Get(ShowGallery).URL("id", strconv.Itoa(int(gallery.ID)))
+	url, err := g.r.Get(EditGallery).URL("id", strconv.Itoa(int(gallery.ID)))
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
@@ -193,8 +194,12 @@ func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.SetSuccessMessage("Successfully deleted gallery")
-	g.EditView.Render(w, vd)
+	url, err := g.r.Get(IndexGalleries).URL()
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, url.Path, http.StatusFound)
 }
 
 func (g *Galleries) Index(w http.ResponseWriter, r *http.Request) {
@@ -208,7 +213,6 @@ func (g *Galleries) Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vd.Yield = galleries
-	vd.SetSuccessMessage("Hello")
 	g.IndexView.Render(w, vd)
 	return
 }
