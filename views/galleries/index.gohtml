@@ -1,0 +1,33 @@
+{{define "yield"}}
+    {{template "index_galleries" .}}
+{{end}}
+
+{{define "index_galleries"}}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Title</th>
+            <th scope="col">View</th>
+            <th scope="col">Edit</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .}}
+            <tr>
+                <th scope="row">{{ .ID}}</th>
+                <td>{{.Title}}</td>
+                <td>
+                    <a href="/galleries/{{.ID}}">View</a>
+                </td>
+                <td>
+                    <a href="/galleries/{{.ID}}/edit">Edit</a>
+                </td>
+            </tr>
+        {{end}}
+        </tbody>
+    </table>
+    <a href="/galleries/new" class="btn btn-primary">
+        New Gallery
+    </a>
+{{end}}

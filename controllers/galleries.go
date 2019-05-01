@@ -10,11 +10,12 @@ import (
 )
 
 type Galleries struct {
-	NewView  *views.View
-	ShowView *views.View
-	EditView *views.View
-	gs       models.GalleryService
-	r        *mux.Router
+	NewView   *views.View
+	ShowView  *views.View
+	EditView  *views.View
+	IndexView *views.View
+	gs        models.GalleryService
+	r         *mux.Router
 }
 
 type GalleryForm struct {
@@ -30,11 +31,12 @@ const (
 
 func NewGalleries(services models.GalleryService, r *mux.Router) *Galleries {
 	return &Galleries{
-		NewView:  views.NewView("bootstrap", "galleries/new"),
-		ShowView: views.NewView("bootstrap", "galleries/show"),
-		EditView: views.NewView("bootstrap", "galleries/edit"),
-		gs:       services,
-		r:        r,
+		NewView:   views.NewView("bootstrap", "galleries/new"),
+		ShowView:  views.NewView("bootstrap", "galleries/show"),
+		EditView:  views.NewView("bootstrap", "galleries/edit"),
+		IndexView: views.NewView("bootstrap", "galleries/index"),
+		gs:        services,
+		r:         r,
 	}
 }
 
@@ -193,4 +195,20 @@ func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 
 	vd.SetSuccessMessage("Successfully deleted gallery")
 	g.EditView.Render(w, vd)
+}
+
+func (g *Galleries) Index(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	user := context.User(r.Context())
+	galleries, err := g.gs.ByUserID(user.ID)
+	if err != nil {
+		vd.SetAlert(err)
+		g.IndexView.Render(w, vd)
+		return
+	}
+
+	vd.Yield = galleries
+	vd.SetSuccessMessage("Hello")
+	g.IndexView.Render(w, vd)
+	return
 }
