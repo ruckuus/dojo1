@@ -11,9 +11,27 @@ const (
 	ErrImageInvalidPath modelError = "Error"
 )
 
+// Image is used to represent images stored in a Gallery
+// It is not stored in DB, the referenced data is stored
+// on disk.
+type Image struct {
+	GalleryID uint
+	Filename  string
+}
+
+func (i *Image) Path() string {
+	return "/" + i.RelativePath()
+}
+
+func (i *Image) RelativePath() string {
+	galleryID := fmt.Sprintf("%v", i.GalleryID)
+	return filepath.ToSlash(filepath.Join("images", "galleries", galleryID, i.Filename))
+}
+
+// ImageService is the definition of image service operation
 type ImageService interface {
 	Create(galleryID uint, r io.Reader, filename string) error
-	ByGalleryID(galleryID uint) ([]string, error)
+	ByGalleryID(galleryID uint) ([]Image, error)
 }
 
 type imageService struct{}
@@ -55,14 +73,20 @@ func (im *imageService) Create(galleryID uint, r io.Reader, filename string) err
 	return nil
 }
 
-func (im *imageService) ByGalleryID(galleryID uint) ([]string, error) {
+func (im *imageService) ByGalleryID(galleryID uint) ([]Image, error) {
 	path := im.imagePath(galleryID)
 	strings, err := filepath.Glob(filepath.Join(path, "*"))
 	if err != nil {
 		return nil, err
 	}
-	for i := range strings {
-		strings[i] = "/" + strings[i]
+
+	// make slice of type Image
+	ret := make([]Image, len(strings))
+	for i, imgPath := range strings {
+		ret[i] = Image{
+			GalleryID: galleryID,
+			Filename:  filepath.Base(imgPath),
+		}
 	}
-	return strings, nil
+	return ret, nil
 }
