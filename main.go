@@ -6,6 +6,7 @@ import (
 	"github.com/ruckuus/dojo1/controllers"
 	"github.com/ruckuus/dojo1/middleware"
 	"github.com/ruckuus/dojo1/models"
+	"log"
 	"net/http"
 )
 
@@ -85,6 +86,11 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}/images", requireUserMw.ApplyFn(galleriesC.ImageUpload)).
 		Methods("POST")
 
+	// Image routes
+	imageHandler := http.FileServer(http.Dir("./images/"))
+	r.PathPrefix("/images/").Handler(http.StripPrefix("/images/", imageHandler))
+
 	// userMw.Apply(r) lets User Middleware to execute before the routes
-	http.ListenAndServe(":3000", userMw.Apply(r))
+
+	log.Fatal(http.ListenAndServe(":3000", userMw.Apply(r)))
 }
