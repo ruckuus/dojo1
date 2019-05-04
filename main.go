@@ -81,6 +81,10 @@ func main() {
 		Methods("POST").
 		Name(controllers.DeleteGallery)
 
+	// Image Upload
+	r.HandleFunc("/galleries/{id:[0-9]+}/images", requireUserMw.ApplyFn(galleriesC.ImageUpload)).
+		Methods("POST")
+
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 	http.ListenAndServe(":3000", userMw.Apply(r))
 }

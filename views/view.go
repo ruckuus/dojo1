@@ -111,7 +111,7 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) 
 	var buf bytes.Buffer
 	err := v.Template.ExecuteTemplate(&buf, v.Layout, vd)
 	if err != nil {
-		http.Error(w, "Something went wrong!", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

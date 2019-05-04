@@ -1,11 +1,15 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/context"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -23,11 +27,12 @@ type GalleryForm struct {
 }
 
 const (
-	ShowGallery    = "show_gallery"
-	EditGallery    = "edit_gallery"
-	UpdateGallery  = "update_gallery"
-	DeleteGallery  = "delete_gallery"
-	IndexGalleries = "index_galleries"
+	ShowGallery     = "show_gallery"
+	EditGallery     = "edit_gallery"
+	UpdateGallery   = "update_gallery"
+	DeleteGallery   = "delete_gallery"
+	IndexGalleries  = "index_galleries"
+	maxMultipartMem = 1 << 20 // 1 MB
 )
 
 func NewGalleries(services models.GalleryService, r *mux.Router) *Galleries {
@@ -215,4 +220,63 @@ func (g *Galleries) Index(w http.ResponseWriter, r *http.Request) {
 	vd.Yield = galleries
 	g.IndexView.Render(w, r, vd)
 	return
+}
+
+func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		return
+	}
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Gallery not found", http.StatusNotFound)
+		return
+	}
+
+	err = r.ParseMultipartForm(maxMultipartMem)
+	if err != nil {
+		vd.SetAlert(err)
+		g.EditView.Render(w, r, vd)
+		return
+	}
+
+	galleryPath := filepath.Join("images", "galleries", fmt.Sprintf("%v", gallery.ID))
+
+	err = os.MkdirAll(galleryPath, 0755)
+	if err != nil {
+		vd.SetAlert(err)
+		g.EditView.Render(w, r, vd)
+		return
+	}
+
+	files := r.MultipartForm.File["images"]
+	for _, f := range files {
+		file, err := f.Open()
+		if err != nil {
+			vd.SetAlert(err)
+			g.EditView.Render(w, r, vd)
+			return
+		}
+		defer file.Close()
+
+		dst, err := os.Create(filepath.Join(galleryPath, f.Filename))
+		if err != nil {
+			vd.SetAlert(err)
+			g.EditView.Render(w, r, vd)
+			return
+		}
+		defer dst.Close()
+
+		_, err = io.Copy(dst, file)
+		if err != nil {
+			vd.SetAlert(err)
+			g.EditView.Render(w, r, vd)
+			return
+		}
+
+		vd.SetSuccessMessage("Successfully upload images!")
+		g.EditView.Render(w, r, vd)
+		return
+	}
 }
