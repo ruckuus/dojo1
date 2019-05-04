@@ -43,7 +43,7 @@ func main() {
 
 	userC := controllers.NewUsers(services.User)
 	staticC := controllers.NewStatic()
-	galleriesC := controllers.NewGalleries(services.Gallery, r)
+	galleriesC := controllers.NewGalleries(services.Gallery, r, services.Image)
 
 	newGallery := requireUserMw.Apply(galleriesC.NewView)
 	createGallery := requireUserMw.ApplyFn(galleriesC.Create)

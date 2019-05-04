@@ -1,15 +1,11 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/context"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/views"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 )
 
@@ -20,6 +16,7 @@ type Galleries struct {
 	IndexView *views.View
 	gs        models.GalleryService
 	r         *mux.Router
+	is        models.ImageService
 }
 
 type GalleryForm struct {
@@ -35,7 +32,7 @@ const (
 	maxMultipartMem = 1 << 20 // 1 MB
 )
 
-func NewGalleries(services models.GalleryService, r *mux.Router) *Galleries {
+func NewGalleries(services models.GalleryService, r *mux.Router, is models.ImageService) *Galleries {
 	return &Galleries{
 		NewView:   views.NewView("bootstrap", "galleries/new"),
 		ShowView:  views.NewView("bootstrap", "galleries/show"),
@@ -43,6 +40,7 @@ func NewGalleries(services models.GalleryService, r *mux.Router) *Galleries {
 		IndexView: views.NewView("bootstrap", "galleries/index"),
 		gs:        services,
 		r:         r,
+		is:        is,
 	}
 }
 
@@ -241,15 +239,6 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	galleryPath := filepath.Join("images", "galleries", fmt.Sprintf("%v", gallery.ID))
-
-	err = os.MkdirAll(galleryPath, 0755)
-	if err != nil {
-		vd.SetAlert(err)
-		g.EditView.Render(w, r, vd)
-		return
-	}
-
 	files := r.MultipartForm.File["images"]
 	for _, f := range files {
 		file, err := f.Open()
@@ -260,21 +249,12 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		dst, err := os.Create(filepath.Join(galleryPath, f.Filename))
+		err = g.is.Create(gallery.ID, file, f.Filename)
 		if err != nil {
 			vd.SetAlert(err)
 			g.EditView.Render(w, r, vd)
 			return
 		}
-		defer dst.Close()
-
-		_, err = io.Copy(dst, file)
-		if err != nil {
-			vd.SetAlert(err)
-			g.EditView.Render(w, r, vd)
-			return
-		}
-
 		vd.SetSuccessMessage("Successfully upload images!")
 		g.EditView.Render(w, r, vd)
 		return
