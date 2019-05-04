@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/context"
 	"github.com/ruckuus/dojo1/models"
@@ -265,4 +266,42 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		g.EditView.Render(w, r, vd)
 		return
 	}
+}
+
+func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		return
+	}
+
+	user := context.User(r.Context())
+
+	if user.ID != gallery.UserID {
+		http.Error(w, "You don't have permission to delete this image.", http.StatusForbidden)
+		return
+	}
+
+	// Get filename from the path
+	filename := mux.Vars(r)["filename"]
+
+	err = g.is.Delete(&models.Image{
+		GalleryID: gallery.ID,
+		Filename:  filename,
+	})
+
+	if err != nil {
+		vd.SetAlert(err)
+		g.EditView.Render(w, r, vd)
+		return
+	}
+
+	// All is well, redirect to the edit gallery page
+	url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
+	if err != nil {
+		http.Redirect(w, r, "/galleries", http.StatusFound)
+		return
+	}
+
+	http.Redirect(w, r, url.Path, http.StatusFound)
 }
