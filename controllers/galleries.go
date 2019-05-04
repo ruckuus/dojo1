@@ -112,6 +112,12 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 		}
 		return nil, err
 	}
+	images, err := g.is.ByGalleryID(gallery.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, err
+	}
+	gallery.Images = images
 	return gallery, nil
 }
 

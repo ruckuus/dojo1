@@ -13,6 +13,7 @@ const (
 
 type ImageService interface {
 	Create(galleryID uint, r io.Reader, filename string) error
+	ByGalleryID(galleryID uint) ([]string, error)
 }
 
 type imageService struct{}
@@ -21,8 +22,12 @@ func NewImageService() ImageService {
 	return &imageService{}
 }
 
+func (im *imageService) imagePath(galleryID uint) string {
+	return filepath.Join("images", "galleries", fmt.Sprintf("%v", galleryID))
+}
+
 func (im *imageService) mkImagePath(galleryID uint) (string, error) {
-	galleryPath := filepath.Join("images", "galleries", fmt.Sprintf("%v", galleryID))
+	galleryPath := im.imagePath(galleryID)
 	err := os.MkdirAll(galleryPath, 0755)
 	if err != nil {
 		return "", err
@@ -48,4 +53,13 @@ func (im *imageService) Create(galleryID uint, r io.Reader, filename string) err
 		return err
 	}
 	return nil
+}
+
+func (im *imageService) ByGalleryID(galleryID uint) ([]string, error) {
+	path := im.imagePath(galleryID)
+	strings, err := filepath.Glob(filepath.Join(path, "*"))
+	if err != nil {
+		return nil, err
+	}
+	return strings, nil
 }
