@@ -53,6 +53,24 @@ func NewGalleryService(db *gorm.DB) GalleryService {
 	}
 }
 
+func (g *Gallery) ImagesSplitN(n int) [][]string {
+	// Make 2D slice
+	ret := make([][]string, n)
+
+	// make slice for each row
+	for i := 0; i < n; i++ {
+		ret[i] = make([]string, 0)
+	}
+
+	for i, img := range g.Images {
+		// assign image into slices
+		bucket := i % n
+		ret[bucket] = append(ret[bucket], img)
+	}
+
+	return ret
+}
+
 func (gg *galleryGorm) Create(gallery *Gallery) error {
 	return gg.db.Create(gallery).Error
 }
