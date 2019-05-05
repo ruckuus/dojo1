@@ -12,6 +12,9 @@ func parseForm(r *http.Request, dst interface{}) error {
 	}
 
 	decoder := schema.NewDecoder()
+	// This is to tell gorilla/schema to ignore unknown key in the request
+	//
+	decoder.IgnoreUnknownKeys(true)
 	err := decoder.Decode(dst, r.PostForm)
 
 	if err != nil {

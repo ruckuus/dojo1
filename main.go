@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/controllers"
 	"github.com/ruckuus/dojo1/middleware"
 	"github.com/ruckuus/dojo1/models"
+	"github.com/ruckuus/dojo1/rand"
 	"log"
 	"net/http"
 )
@@ -35,13 +37,24 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// Middleware
+	// Middlewares
 
+	// User middleware
 	userMw := middleware.User{
 		UserService: services.User,
 	}
 	requireUserMw := middleware.RequireUser{}
 
+	// CSRF Middleware
+	isProd := false
+	csrfKey, err := rand.Bytes(32)
+	if err != nil {
+		panic(err)
+	}
+
+	csrfMw := csrf.Protect(csrfKey, csrf.Secure(isProd))
+
+	// Controllers
 	userC := controllers.NewUsers(services.User)
 	staticC := controllers.NewStatic()
 	galleriesC := controllers.NewGalleries(services.Gallery, r, services.Image)
@@ -100,5 +113,5 @@ func main() {
 
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 
-	log.Fatal(http.ListenAndServe(":3000", userMw.Apply(r)))
+	log.Fatal(http.ListenAndServe(":3000", csrfMw(userMw.Apply(r))))
 }
