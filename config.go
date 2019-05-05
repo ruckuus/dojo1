@@ -3,8 +3,10 @@ package main
 import "fmt"
 
 type Config struct {
-	Port int
-	Env  string
+	Port    int    `json:"port"`
+	Env     string `json:"env"`
+	HMACKey string `json:"hmac_key"`
+	Pepper  string `json:"pepper"`
 }
 
 func (c Config) IsProd() bool {
@@ -13,8 +15,10 @@ func (c Config) IsProd() bool {
 
 func DefaultConfig() Config {
 	return Config{
-		Port: 3000,
-		Env:  "dev",
+		Port:    3000,
+		Env:     "dev",
+		HMACKey: "SuperSecret2019!$",
+		Pepper:  "HALUSINOGEN2019$$",
 	}
 }
 

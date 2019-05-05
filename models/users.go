@@ -52,6 +52,7 @@ type UserDB interface {
 // userService
 type userService struct {
 	UserDB
+	pepper string
 }
 
 // userGorm represents the database interaction layer
@@ -67,6 +68,7 @@ type userValidator struct {
 	UserDB
 	hmac       hash.HMAC
 	emailRegex *regexp.Regexp
+	pepper     string
 }
 
 type modelError string
@@ -82,9 +84,6 @@ func (e modelError) Public() string {
 
 	return strings.Join(split, " ")
 }
-
-var userPasswordPepper = "HALUSINOGEN2019$$"
-var userHMACSecretKey = "SuperSecret2019!$"
 
 // Check, it must error during compilation
 var _ UserDB = &userGorm{}
@@ -123,27 +122,25 @@ var (
 )
 
 // NewUserService Create new UserService instance
-func NewUserService(db *gorm.DB) UserService {
+func NewUserService(db *gorm.DB, pepper, hmacKey string) UserService {
 	ug := &userGorm{db}
 
-	hmac := hash.NewHMAC(userHMACSecretKey)
-	uv := newUserValidator(ug, hmac)
+	hmac := hash.NewHMAC(hmacKey)
+	uv := newUserValidator(ug, hmac, pepper)
 
 	return &userService{
 		UserDB: uv,
+		pepper: pepper,
 	}
 }
 
-func newUserValidator(udb UserDB, hmac hash.HMAC) *userValidator {
+func newUserValidator(udb UserDB, hmac hash.HMAC, pepper string) *userValidator {
 	return &userValidator{
 		UserDB:     udb,
 		hmac:       hmac,
 		emailRegex: regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,16}$`),
+		pepper:     pepper,
 	}
-}
-
-func preparePassword(password string) string {
-	return password + userPasswordPepper
 }
 
 // Create new record
@@ -216,7 +213,8 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 		return nil, err
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(preparePassword(password)))
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash),
+		[]byte(password+us.pepper))
 	switch err {
 	case nil:
 		return foundUser, nil
@@ -315,7 +313,7 @@ func (uv *userValidator) bcryptPassword(user *User) error {
 		return nil
 	}
 
-	passwordBytes := preparePassword(user.Password)
+	passwordBytes := user.Password + uv.pepper
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(passwordBytes), bcrypt.DefaultCost)
 	if err != nil {
 		return err
