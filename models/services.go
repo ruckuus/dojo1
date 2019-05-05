@@ -9,9 +9,9 @@ type Services struct {
 	db      *gorm.DB
 }
 
-func NewServices(connectionInfo string) (*Services, error) {
+func NewServices(dialect, connectionInfo string) (*Services, error) {
 
-	db, err := gorm.Open("postgres", connectionInfo)
+	db, err := gorm.Open(dialect, connectionInfo)
 	if err != nil {
 		return nil, err
 	}

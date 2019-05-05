@@ -22,11 +22,10 @@ const (
 
 func main() {
 
-	// Prepare DB connection string
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, db_name)
+	cfg := DefaultConfig()
+	dbCfg := DefaultPostgresConfig()
 
-	services, err := models.NewServices(psqlInfo)
+	services, err := models.NewServices(dbCfg.Dialect(), dbCfg.ConnectionInfo())
 
 	if err != nil {
 		panic(err)
@@ -46,13 +45,12 @@ func main() {
 	requireUserMw := middleware.RequireUser{}
 
 	// CSRF Middleware
-	isProd := false
 	csrfKey, err := rand.Bytes(32)
 	if err != nil {
 		panic(err)
 	}
 
-	csrfMw := csrf.Protect(csrfKey, csrf.Secure(isProd))
+	csrfMw := csrf.Protect(csrfKey, csrf.Secure(cfg.IsProd()))
 
 	// Controllers
 	userC := controllers.NewUsers(services.User)
@@ -113,5 +111,5 @@ func main() {
 
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 
-	log.Fatal(http.ListenAndServe(":3000", csrfMw(userMw.Apply(r))))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), csrfMw(userMw.Apply(r))))
 }
