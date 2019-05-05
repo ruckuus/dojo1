@@ -258,18 +258,16 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 
 		err = g.is.Create(gallery.ID, file, f.Filename)
 		if err != nil {
-			vd.SetAlert(err)
-			g.EditView.Render(w, r, vd)
+			http.Redirect(w, r, "/galleries", http.StatusFound)
 			return
 		}
-		vd.SetSuccessMessage("Successfully upload images!")
-		g.EditView.Render(w, r, vd)
+		url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
+		http.Redirect(w, r, url.Path, http.StatusFound)
 		return
 	}
 }
 
 func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
-	var vd views.Data
 	gallery, err := g.galleryByID(w, r)
 	if err != nil {
 		return
@@ -289,12 +287,6 @@ func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
 		GalleryID: gallery.ID,
 		Filename:  filename,
 	})
-
-	if err != nil {
-		vd.SetAlert(err)
-		g.EditView.Render(w, r, vd)
-		return
-	}
 
 	// All is well, redirect to the edit gallery page
 	url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
