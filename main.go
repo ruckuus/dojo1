@@ -94,6 +94,10 @@ func main() {
 	imageHandler := http.FileServer(http.Dir("./images/"))
 	r.PathPrefix("/images/").Handler(http.StripPrefix("/images/", imageHandler))
 
+	// Static assets
+	assetsHandler := http.FileServer(http.Dir("./public"))
+	r.PathPrefix("/assets/").Handler(assetsHandler)
+
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 
 	log.Fatal(http.ListenAndServe(":3000", userMw.Apply(r)))
