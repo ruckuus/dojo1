@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 )
 
@@ -129,6 +130,9 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) 
 		// we don't need to worry about error here
 		"csrfField": func() template.HTML {
 			return csrfField
+		},
+		"pathEscape": func(s string) string {
+			return url.PathEscape(s)
 		},
 	})
 
