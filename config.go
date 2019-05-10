@@ -1,12 +1,17 @@
 package main
 
-import "fmt"
+import (
+	json2 "encoding/json"
+	"fmt"
+	"os"
+)
 
 type Config struct {
-	Port    int    `json:"port"`
-	Env     string `json:"env"`
-	HMACKey string `json:"hmac_key"`
-	Pepper  string `json:"pepper"`
+	Port     int            `json:"port"`
+	Env      string         `json:"env"`
+	HMACKey  string         `json:"hmac_key"`
+	Pepper   string         `json:"pepper"`
+	Database PostgresConfig `json:"database"`
 }
 
 func (c Config) IsProd() bool {
@@ -15,10 +20,11 @@ func (c Config) IsProd() bool {
 
 func DefaultConfig() Config {
 	return Config{
-		Port:    3000,
-		Env:     "dev",
-		HMACKey: "SuperSecret2019!$",
-		Pepper:  "HALUSINOGEN2019$$",
+		Port:     3000,
+		Env:      "dev",
+		HMACKey:  "SuperSecret2019!$",
+		Pepper:   "HALUSINOGEN2019$$",
+		Database: DefaultPostgresConfig(),
 	}
 }
 
@@ -53,4 +59,26 @@ func DefaultPostgresConfig() PostgresConfig {
 		Password: "lenslocked_password",
 		Name:     "lenslocked_db",
 	}
+}
+
+func LoadConfig(isProd bool) Config {
+	if !isProd {
+		DefaultConfig()
+	}
+
+	cfgFile, err := os.Open(".config")
+	if err != nil {
+		panic(err)
+	}
+
+	json := json2.NewDecoder(cfgFile)
+
+	var cfg Config
+
+	err = json.Decode(&cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	return cfg
 }

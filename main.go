@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
@@ -22,13 +23,14 @@ const (
 
 func main() {
 
-	cfg := DefaultConfig()
-	dbCfg := DefaultPostgresConfig()
+	runProd := flag.Bool("prod", false, "Ensure app running with production config (.config)")
+
+	config := LoadConfig(*runProd)
 
 	services, err := models.NewServices(
-		models.WithGorm(dbCfg.Dialect(), dbCfg.ConnectionInfo()),
-		models.WithLogMode(!cfg.IsProd()),
-		models.WithUser(cfg.Pepper, cfg.HMACKey),
+		models.WithGorm(config.Database.Dialect(), config.Database.ConnectionInfo()),
+		models.WithLogMode(!config.IsProd()),
+		models.WithUser(config.Pepper, config.HMACKey),
 		models.WithGallery(),
 		models.WithImage(),
 	)
@@ -56,7 +58,7 @@ func main() {
 		panic(err)
 	}
 
-	csrfMw := csrf.Protect(csrfKey, csrf.Secure(cfg.IsProd()))
+	csrfMw := csrf.Protect(csrfKey, csrf.Secure(config.IsProd()))
 
 	// Controllers
 	userC := controllers.NewUsers(services.User)
@@ -117,5 +119,5 @@ func main() {
 
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), csrfMw(userMw.Apply(r))))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), csrfMw(userMw.Apply(r))))
 }
