@@ -4,3 +4,4 @@ tmp/*
 exp/
 images/*
 vendor/
+!vendor/vendor.json
