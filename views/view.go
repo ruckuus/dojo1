@@ -91,7 +91,7 @@ func NewView(layout string, files ...string) *View {
 			return "", errors.New("csrfField is not implemented yet.")
 		},
 		"pathEscape": func(s string) string {
-			return "Not implemented"
+			return url.PathEscape(s)
 		},
 	}).
 		ParseFiles(files...)
@@ -122,6 +122,13 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) 
 			Yield: data,
 		}
 	}
+
+	// render persisted alert
+	if alert := getAlert(r); alert != nil {
+		vd.Alert = alert
+		clearAlert(w)
+	}
+
 	vd.User = context.User(r.Context())
 	var buf bytes.Buffer
 
@@ -133,9 +140,6 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) 
 		// we don't need to worry about error here
 		"csrfField": func() template.HTML {
 			return csrfField
-		},
-		"pathEscape": func(s string) string {
-			return url.PathEscape(s)
 		},
 	})
 

@@ -115,7 +115,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/galleries", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusFound)
 
 }
 
