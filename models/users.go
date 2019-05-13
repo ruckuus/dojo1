@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type User struct {
@@ -22,6 +23,8 @@ type User struct {
 
 type UserService interface {
 	Authenticate(email, password string) (*User, error)
+	InitiateReset(email string) (string, error)
+	CompleteReset(token, newPassword string) (*User, error)
 	UserDB
 }
 
@@ -52,7 +55,8 @@ type UserDB interface {
 // userService
 type userService struct {
 	UserDB
-	pepper string
+	pepper    string
+	pwResetDB pwResetDB
 }
 
 // userGorm represents the database interaction layer
@@ -119,6 +123,9 @@ var (
 
 	// ErrRememberTooShort
 	ErrRememberTooShort modelError = "models: remember token must be at least 32 bytes"
+
+	// ErrTokenInvalid
+	ErrTokenInvalid modelError = "models: token provided is not valid"
 )
 
 // NewUserService Create new UserService instance
@@ -129,8 +136,9 @@ func NewUserService(db *gorm.DB, pepper, hmacKey string) UserService {
 	uv := newUserValidator(ug, hmac, pepper)
 
 	return &userService{
-		UserDB: uv,
-		pepper: pepper,
+		UserDB:    uv,
+		pepper:    pepper,
+		pwResetDB: newPwResetValidator(&pwResetGorm{db}, hmac),
 	}
 }
 
@@ -223,6 +231,47 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 	default:
 		return nil, err
 	}
+}
+
+func (us *userService) InitiateReset(email string) (string, error) {
+	user, err := us.ByEmail(email)
+	if err != nil {
+		return "", nil
+	}
+
+	pwr := pwReset{
+		UserID: user.ID,
+	}
+
+	if err := us.pwResetDB.Create(&pwr); err != nil {
+		return "", nil
+	}
+
+	return pwr.Token, nil
+}
+
+func (us *userService) CompleteReset(token, newPassword string) (*User, error) {
+	pwr, err := us.pwResetDB.ByToken(token)
+	if err != nil {
+		if err == ErrNotFound {
+			return nil, ErrTokenInvalid
+		}
+		return nil, err
+	}
+	// check token validity
+
+	if time.Now().Sub(pwr.CreatedAt) < (12 * time.Hour) {
+		return nil, ErrTokenInvalid
+	}
+
+	user, err := us.ByID(pwr.UserID)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = newPassword
+
+	err = us.Update(user)
+	return user, nil
 }
 
 // Create will perform user validation before calling user creation function
