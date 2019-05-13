@@ -48,6 +48,10 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 
 	p := SignupForm{}
+
+	// copy form input back to signupForm
+	vd.Yield = &p
+
 	err := parseForm(r, &p)
 
 	if err != nil {
