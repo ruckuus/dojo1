@@ -22,8 +22,12 @@
                     <li><a href="/faq">FAQ</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
+                    {{ if .User}}
+                        <li>{{template "logoutForm"}}</li>
+                    {{else}}
                     <li><a href="/login">Login</a></li>
                     <li><a href="/signup">Sign Up</a></li>
+                    {{end}}
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li><a href="/galleries/new">New Gallery</a></li>
@@ -31,4 +35,11 @@
             </div>
         </div>
     </nav>
+{{end}}
+
+{{define "logoutForm"}}
+    <form class="navbar-form navbar-left" action="/logout" method="POST">
+        {{csrfField}}
+        <button type="submit" class="btn btn-default">Log out</button>
+    </form>
 {{end}}

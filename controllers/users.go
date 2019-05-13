@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/ruckuus/dojo1/context"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/rand"
 	"github.com/ruckuus/dojo1/views"
 	"net/http"
+	"time"
 )
 
 type Users struct {
@@ -137,6 +139,26 @@ func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 
 	http.SetCookie(w, &cookie)
 	return nil
+}
+
+func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{
+		Name:     "remember_token",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, &cookie)
+
+	user := context.User(r.Context())
+
+	token, _ := rand.RememberToken()
+	user.Remember = token
+
+	u.us.Update(user)
+
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {

@@ -80,6 +80,7 @@ func main() {
 	r.HandleFunc("/signup", userC.Create).Methods("POST")
 	r.Handle("/login", userC.LoginView).Methods("GET")
 	r.HandleFunc("/login", userC.Login).Methods("POST")
+	r.HandleFunc("/logout", requireUserMw.ApplyFn(userC.Logout)).Methods("POST")
 	r.HandleFunc("/cookietest", userC.CookieTest).Methods("GET")
 
 	// Gallery router
