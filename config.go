@@ -12,6 +12,13 @@ type Config struct {
 	HMACKey  string         `json:"hmac_key"`
 	Pepper   string         `json:"pepper"`
 	Database PostgresConfig `json:"database"`
+	Mailgun  MailgunConfig  `json:"mailgun"`
+}
+
+type MailgunConfig struct {
+	APIKey       string `json:"api_key"`
+	PublicAPIKey string `json:"public_api_key"`
+	Domain       string `json:"domain"`
 }
 
 func (c Config) IsProd() bool {

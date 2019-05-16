@@ -82,6 +82,9 @@ func main() {
 	r.HandleFunc("/login", userC.Login).Methods("POST")
 	r.HandleFunc("/logout", requireUserMw.ApplyFn(userC.Logout)).Methods("POST")
 	r.HandleFunc("/cookietest", userC.CookieTest).Methods("GET")
+	r.Handle("/forgot", userC.ForgotPwView).Methods("GET")
+	r.HandleFunc("/forgot", userC.InitiateReset).Methods("POST")
+	r.Handle("/reset", userC.ResetPwView).Methods("GET")
 
 	// Gallery router
 	r.Handle("/galleries/new", newGallery).Methods("GET")

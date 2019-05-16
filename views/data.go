@@ -55,8 +55,8 @@ func getAlert(r *http.Request) *Alert {
 	}
 
 	alert := &Alert{
-		Level:   lvl.String(),
-		Message: msg.String(),
+		Level:   lvl.Value,
+		Message: msg.Value,
 	}
 
 	return alert

@@ -11,9 +11,11 @@ import (
 )
 
 type Users struct {
-	NewView   *views.View
-	LoginView *views.View
-	us        models.UserService
+	NewView      *views.View
+	LoginView    *views.View
+	ForgotPwView *views.View
+	ResetPwView  *views.View
+	us           models.UserService
 }
 
 type SignupForm struct {
@@ -27,11 +29,19 @@ type LoginForm struct {
 	Password string `schema:"password"`
 }
 
+type ResetForm struct {
+	Email    string `schema:"email"`
+	Token    string `schema:"token"`
+	Password string `schema:"password"`
+}
+
 func NewUsers(us models.UserService) *Users {
 	return &Users{
-		NewView:   views.NewView("bootstrap", "users/new"),
-		LoginView: views.NewView("bootstrap", "users/login"),
-		us:        us,
+		NewView:      views.NewView("bootstrap", "users/new"),
+		LoginView:    views.NewView("bootstrap", "users/login"),
+		ForgotPwView: views.NewView("bootstrap", "users/forgot_pw"),
+		ResetPwView:  views.NewView("bootstrap", "users/reset_pw"),
+		us:           us,
 	}
 }
 
@@ -174,4 +184,30 @@ func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 	}
 	fmt.Fprintf(w, "Found user: %+v", user)
+}
+
+// POST /forgot
+func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	var form ResetForm
+	vd.Yield = &form
+	if err := parseForm(r, &form); err != nil {
+		vd.SetAlert(err)
+		u.ForgotPwView.Render(w, r, vd)
+		return
+	}
+
+	token, err := u.us.InitiateReset(form.Email)
+	if err != nil {
+		vd.SetAlert(err)
+		u.ForgotPwView.Render(w, r, vd)
+		return
+	}
+
+	_ = token
+
+	views.RedirectAlert(w, r, "/reset", http.StatusFound, views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Reset password instruction has been email  to you",
+	})
 }
