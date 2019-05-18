@@ -84,7 +84,8 @@ func main() {
 	r.HandleFunc("/cookietest", userC.CookieTest).Methods("GET")
 	r.Handle("/forgot", userC.ForgotPwView).Methods("GET")
 	r.HandleFunc("/forgot", userC.InitiateReset).Methods("POST")
-	r.Handle("/reset", userC.ResetPwView).Methods("GET")
+	r.HandleFunc("/reset", userC.ResetPw).Methods("GET")
+	r.HandleFunc("/reset", userC.CompleteReset).Methods("POST")
 
 	// Gallery router
 	r.Handle("/galleries/new", newGallery).Methods("GET")

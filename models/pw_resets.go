@@ -66,7 +66,7 @@ func (pwrv *pwResetValidator) ByToken(token string) (*pwReset, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pwrv.pwResetDB.ByToken(token)
+	return pwrv.pwResetDB.ByToken(pwr.TokenHash)
 }
 
 func (pwrv *pwResetValidator) Create(pwr *pwReset) error {
@@ -111,7 +111,7 @@ func (pwvr *pwResetValidator) setTokenIfUnset(pwr *pwReset) error {
 
 func (pwvr *pwResetValidator) hmacToken(pwr *pwReset) error {
 	if pwr.Token == "" {
-		return nil
+		return ErrTokenInvalid
 	}
 
 	pwr.TokenHash = pwvr.hmac.Hash(pwr.Token)

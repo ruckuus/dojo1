@@ -29,7 +29,7 @@ type LoginForm struct {
 	Password string `schema:"password"`
 }
 
-type ResetForm struct {
+type ResetPwForm struct {
 	Email    string `schema:"email"`
 	Token    string `schema:"token"`
 	Password string `schema:"password"`
@@ -189,7 +189,7 @@ func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
 // POST /forgot
 func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
-	var form ResetForm
+	var form ResetPwForm
 	vd.Yield = &form
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlert(err)
@@ -204,10 +204,45 @@ func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = token
-
 	views.RedirectAlert(w, r, "/reset", http.StatusFound, views.Alert{
 		Level:   views.AlertLvlSuccess,
-		Message: "Reset password instruction has been email  to you",
+		Message: "If we find the provided email, a confirmation link will be sent to that email address.",
+	})
+}
+
+// GET /reset
+func (u *Users) ResetPw(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	var form ResetPwForm
+	vd.Yield = &form
+
+	if err := parseForm(r, &form); err != nil {
+		vd.SetAlert(err)
+	}
+	u.ResetPwView.Render(w, r, vd)
+}
+
+// POST /reset
+func (u *Users) CompleteReset(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	var form ResetPwForm
+	vd.Yield = &form
+	if err := parseForm(r, &form); err != nil {
+		vd.SetAlert(err)
+		u.ResetPwView.Render(w, r, vd)
+		return
+	}
+
+	user, err := u.us.CompleteReset(form.Token, form.Password)
+	if err != nil {
+		vd.SetAlert(err)
+		u.ResetPwView.Render(w, r, vd)
+		return
+	}
+
+	u.signIn(w, user)
+	views.RedirectAlert(w, r, "/galleries", http.StatusFound, views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Your password has been reset and you have been logged in.",
 	})
 }

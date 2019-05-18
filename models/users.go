@@ -126,6 +126,9 @@ var (
 
 	// ErrTokenInvalid
 	ErrTokenInvalid modelError = "models: token provided is not valid"
+
+	// ErrTokenExpired
+	ErrTokenExpired modelError = "models: token provided is no longer valid"
 )
 
 // NewUserService Create new UserService instance
@@ -260,8 +263,8 @@ func (us *userService) CompleteReset(token, newPassword string) (*User, error) {
 	}
 	// check token validity
 
-	if time.Now().Sub(pwr.CreatedAt) < (12 * time.Hour) {
-		return nil, ErrTokenInvalid
+	if time.Now().Sub(pwr.CreatedAt) > (12 * time.Hour) {
+		return nil, ErrTokenExpired
 	}
 
 	user, err := us.ByID(pwr.UserID)
