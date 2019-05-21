@@ -202,7 +202,9 @@ func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := u.us.InitiateReset(form.Email)
-	fmt.Println("Token for: ", form.Email, " : ", token)
+	//fmt.Println("Token for: ", form.Email, " : ", token)
+
+	err = u.emailer.ResetPw(form.Email, token)
 
 	if err != nil {
 		vd.SetAlert(err)
@@ -220,11 +222,10 @@ func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
 func (u *Users) ResetPw(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 	var form ResetPwForm
+
+	parseURLParams(r, &form)
 	vd.Yield = &form
 
-	if err := parseForm(r, &form); err != nil {
-		vd.SetAlert(err)
-	}
 	u.ResetPwView.Render(w, r, vd)
 }
 
@@ -232,6 +233,7 @@ func (u *Users) ResetPw(w http.ResponseWriter, r *http.Request) {
 func (u *Users) CompleteReset(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 	var form ResetPwForm
+
 	vd.Yield = &form
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlert(err)
