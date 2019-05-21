@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/ruckuus/dojo1/context"
+	"github.com/ruckuus/dojo1/email"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/rand"
 	"github.com/ruckuus/dojo1/views"
@@ -16,6 +17,7 @@ type Users struct {
 	ForgotPwView *views.View
 	ResetPwView  *views.View
 	us           models.UserService
+	emailer      *email.Client
 }
 
 type SignupForm struct {
@@ -35,13 +37,14 @@ type ResetPwForm struct {
 	Password string `schema:"password"`
 }
 
-func NewUsers(us models.UserService) *Users {
+func NewUsers(us models.UserService, emailer *email.Client) *Users {
 	return &Users{
 		NewView:      views.NewView("bootstrap", "users/new"),
 		LoginView:    views.NewView("bootstrap", "users/login"),
 		ForgotPwView: views.NewView("bootstrap", "users/forgot_pw"),
 		ResetPwView:  views.NewView("bootstrap", "users/reset_pw"),
 		us:           us,
+		emailer:      emailer,
 	}
 }
 
@@ -84,6 +87,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	u.emailer.Welcome(user.Name, user.Email)
 	err = u.signIn(w, &user)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
@@ -198,6 +202,8 @@ func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := u.us.InitiateReset(form.Email)
+	fmt.Println("Token for: ", form.Email, " : ", token)
+
 	if err != nil {
 		vd.SetAlert(err)
 		u.ForgotPwView.Render(w, r, vd)

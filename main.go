@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/controllers"
+	"github.com/ruckuus/dojo1/email"
 	"github.com/ruckuus/dojo1/middleware"
 	"github.com/ruckuus/dojo1/models"
 	"github.com/ruckuus/dojo1/rand"
@@ -35,6 +36,12 @@ func main() {
 		models.WithImage(),
 	)
 
+	mailConfig := config.Mailgun
+	emailer := email.NewClient(
+		email.WithSender("Dwi from Tataruma", "dwi@tataruma.com"),
+		email.WithMailgun(mailConfig.Domain, mailConfig.APIKey),
+	)
+
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +68,7 @@ func main() {
 	csrfMw := csrf.Protect(csrfKey, csrf.Secure(config.IsProd()))
 
 	// Controllers
-	userC := controllers.NewUsers(services.User)
+	userC := controllers.NewUsers(services.User, emailer)
 	staticC := controllers.NewStatic()
 	galleriesC := controllers.NewGalleries(services.Gallery, r, services.Image)
 
