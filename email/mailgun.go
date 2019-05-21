@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 	"gopkg.in/mailgun/mailgun-go.v3"
+	"net/url"
 	"time"
 )
 
 const (
 	welcomeSubject = "Welcome to Tataruma.com"
+	resetSubject   = "Instruction for resetting your password."
+
+	resetBaseURL = "https://www.tataruma.com/reset"
 )
 
 const welcomeText = `Hi there!
@@ -27,6 +31,37 @@ We really hope you enjoy using our application!</br>
 <br/>
 Best,<br/>
 Dwi
+`
+
+const resetTextTmpl = `Hi there!
+It appears that you requested password reset. If this was you, please follow the link below:
+
+%s
+
+If you are asked for a token, please use the following value:
+
+%s
+
+If you did not request a password reset you can safely ignore this email and your account will not be changed.
+
+Best,
+Tataruma Support
+`
+
+const resetHTMLTmpl = `Hi there!<br/>
+<br/>
+It appears that you requested password reset. If this was you, please follow the link below:
+<br/>
+<a href="%s">%s</a><br/>
+<br/>
+If you are asked for a token, please use the following value:<br/>
+
+%s<br/>
+<br/>
+If you did not request a password reset you can safely ignore this email and your account will not be changed.<br/>
+<br/>
+Best,<br/>
+Tataruma Support<br/>
 `
 
 type Client struct {
@@ -64,6 +99,24 @@ func WithSender(toName, toEmail string) ClientConfig {
 func (c *Client) Welcome(toName, toEmail string) error {
 	message := c.mg.NewMessage(c.from, welcomeSubject, welcomeText, buildEmail(toName, toEmail))
 	message.SetHtml(welcomeHTML)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	_, _, err := c.mg.Send(ctx, message)
+	return err
+}
+
+func (c *Client) ResetPw(toEmail, token string) error {
+	v := url.Values{}
+	v.Set("token", token)
+	resetUrl := resetBaseURL + "?" + v.Encode()
+
+	resetText := fmt.Sprintf(resetTextTmpl, resetUrl, token)
+
+	message := c.mg.NewMessage(c.from, resetSubject, resetText, toEmail)
+	resetHTML := fmt.Sprint(resetHTMLTmpl, resetUrl, token)
+	message.SetHtml(resetHTML)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
