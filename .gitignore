@@ -5,3 +5,4 @@ exp/
 images/*
 vendor/
 !vendor/vendor.json
+.config
