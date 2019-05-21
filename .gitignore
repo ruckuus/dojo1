@@ -3,6 +3,6 @@
 tmp/*
 exp/
 images/*
+.config
 vendor/
 !vendor/vendor.json
-.config
