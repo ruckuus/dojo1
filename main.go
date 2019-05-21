@@ -14,14 +14,6 @@ import (
 	"net/http"
 )
 
-const (
-	host     = "localhost"
-	port     = 54320
-	user     = "lenslocked_user"
-	password = "lenslocked_password"
-	db_name  = "lenslocked_db"
-)
-
 func main() {
 
 	runProd := flag.Bool("prod", false, "Ensure app running with production config (.config)")
@@ -38,7 +30,7 @@ func main() {
 
 	mailConfig := config.Mailgun
 	emailer := email.NewClient(
-		email.WithSender("Dwi from Tataruma", "dwi@tataruma.com"),
+		email.WithSender("Dwi from Tataruma", "hello@tataruma.com"),
 		email.WithMailgun(mailConfig.Domain, mailConfig.APIKey),
 	)
 

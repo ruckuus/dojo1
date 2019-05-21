@@ -115,13 +115,14 @@ func (c *Client) ResetPw(toEmail, token string) error {
 	resetText := fmt.Sprintf(resetTextTmpl, resetUrl, token)
 
 	message := c.mg.NewMessage(c.from, resetSubject, resetText, toEmail)
-	resetHTML := fmt.Sprint(resetHTMLTmpl, resetUrl, token)
+	resetHTML := fmt.Sprintf(resetHTMLTmpl, resetUrl, resetUrl, token)
 	message.SetHtml(resetHTML)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	_, _, err := c.mg.Send(ctx, message)
+
 	return err
 }
 
