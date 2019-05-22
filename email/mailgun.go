@@ -1,11 +1,9 @@
 package email
 
 import (
-	"context"
 	"fmt"
-	"gopkg.in/mailgun/mailgun-go.v3"
+	"gopkg.in/mailgun/mailgun-go.v2"
 	"net/url"
-	"time"
 )
 
 const (
@@ -100,10 +98,7 @@ func (c *Client) Welcome(toName, toEmail string) error {
 	message := c.mg.NewMessage(c.from, welcomeSubject, welcomeText, buildEmail(toName, toEmail))
 	message.SetHtml(welcomeHTML)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
-	_, _, err := c.mg.Send(ctx, message)
+	_, _, err := c.mg.Send(message)
 	return err
 }
 
@@ -118,10 +113,7 @@ func (c *Client) ResetPw(toEmail, token string) error {
 	resetHTML := fmt.Sprintf(resetHTMLTmpl, resetUrl, resetUrl, token)
 	message.SetHtml(resetHTML)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
-	_, _, err := c.mg.Send(ctx, message)
+	_, _, err := c.mg.Send(message)
 
 	return err
 }
