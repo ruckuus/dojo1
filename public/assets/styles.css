@@ -12,3 +12,8 @@ footer {
 body {
     padding-top: 120px;
 }
+
+.fa-userx {
+    color: rgb(0,0,0);
+    font-size: 38px;
+}
