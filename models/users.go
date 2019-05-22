@@ -112,6 +112,9 @@ var (
 	//ErrEmailTaken
 	ErrEmailTaken modelError = "models: email is already taken"
 
+	//ErrEmailNotFound
+	ErrEmailNotFound modelError = "models: email not found"
+
 	// ErrPasswordTooShort
 	ErrPasswordTooShort modelError = "models: password must be at least 8 characters"
 
@@ -239,7 +242,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 func (us *userService) InitiateReset(email string) (string, error) {
 	user, err := us.ByEmail(email)
 	if err != nil {
-		return "", nil
+		return "", ErrEmailNotFound
 	}
 
 	pwr := pwReset{
@@ -247,7 +250,7 @@ func (us *userService) InitiateReset(email string) (string, error) {
 	}
 
 	if err := us.pwResetDB.Create(&pwr); err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return pwr.Token, nil

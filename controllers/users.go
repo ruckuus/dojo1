@@ -202,6 +202,13 @@ func (u *Users) InitiateReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := u.us.InitiateReset(form.Email)
+
+	if err != nil {
+		vd.SetAlert(err)
+		u.ForgotPwView.Render(w, r, vd)
+		return
+	}
+
 	//fmt.Println("Token for: ", form.Email, " : ", token)
 
 	err = u.emailer.ResetPw(form.Email, token)
