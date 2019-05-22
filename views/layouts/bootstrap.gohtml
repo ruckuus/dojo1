@@ -2,15 +2,18 @@
     <!DOCTYPE html>
     <html lang="en">
     <head>
+        <meta charset="utf-8">
         <title>Tataruma.com</title>
-        <link
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+        <!-- <link
                 href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-                rel="stylesheet">
+                rel="stylesheet"> -->
+        <link href="/assets/style/materia/bootstrap.min.css" rel="stylesheet">
         <link href="/assets/styles.css" rel="stylesheet">
     </head>
     <body>
     {{template "navbar" .}}
-    <div class="container-fluid">
+    <div class="container">
         {{if .Alert}}
             {{template "alert" .Alert}}
         {{end}}

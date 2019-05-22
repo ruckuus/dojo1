@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 export PATH=$PATH:/usr/local/go/bin
+export PATH=$PATH:/root/go/bin
 export GOPATH=/root/go
 go version
 go get -u github.com/golang/dep/cmd/dep
