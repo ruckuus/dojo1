@@ -31,10 +31,18 @@
 {{define "logoutForm"}}
     <form class="form-inline my-2 my-lg-0" action="/logout" method="POST">
         {{csrfField}}
-        <button type="submit" class="btn btn-secondary my-2 my-sm-0">Log out</button>
+        <button class="dropdown-item" type="submit">Logout</button>
     </form>
 {{end}}
 
 {{define "profileMenu"}}
-    <a href="/profile"><i class="fas fa-user-circle fa-userx"></i> </a>
+
+    <div class="btn-group">
+        <a href="#" class="fas fa-user-circle fa-userx"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+            <a href="/profile" class="dropdown-item">My Profile</a>
+            <button class="dropdown-item" type="button">{{ template "logoutForm"}}</button>
+        </div>
+    </div>
 {{end}}
