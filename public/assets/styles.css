@@ -6,7 +6,9 @@
     margin-bottom: 6px;
 }
 footer {
-    padding-top: 60px;
+    bottom: 0;
+    width: 100%;
+    position: absolute;
 }
 
 body {
@@ -17,3 +19,4 @@ body {
     color: rgb(0,0,0);
     font-size: 38px;
 }
+
