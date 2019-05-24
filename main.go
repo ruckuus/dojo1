@@ -85,6 +85,7 @@ func main() {
 	r.HandleFunc("/forgot", userC.InitiateReset).Methods("POST")
 	r.HandleFunc("/reset", userC.ResetPw).Methods("GET")
 	r.HandleFunc("/reset", userC.CompleteReset).Methods("POST")
+	r.HandleFunc("/profile", userC.Profile).Methods("GET")
 
 	// Gallery router
 	r.Handle("/galleries/new", newGallery).Methods("GET")

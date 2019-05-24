@@ -16,6 +16,7 @@ type Users struct {
 	LoginView    *views.View
 	ForgotPwView *views.View
 	ResetPwView  *views.View
+	ProfileView  *views.View
 	us           models.UserService
 	emailer      *email.Client
 }
@@ -43,6 +44,7 @@ func NewUsers(us models.UserService, emailer *email.Client) *Users {
 		LoginView:    views.NewView("bootstrap", "users/login"),
 		ForgotPwView: views.NewView("bootstrap", "users/forgot_pw"),
 		ResetPwView:  views.NewView("bootstrap", "users/reset_pw"),
+		ProfileView:  views.NewView("bootstrap", "users/profile"),
 		us:           us,
 		emailer:      emailer,
 	}
@@ -188,6 +190,13 @@ func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 	}
 	fmt.Fprintf(w, "Found user: %+v", user)
+}
+
+func (u *Users) Profile(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+	user := context.User(r.Context())
+	vd.Yield = user
+	u.ProfileView.Render(w, r, vd)
 }
 
 // POST /forgot

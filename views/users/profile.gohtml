@@ -1,0 +1,12 @@
+{{define "yield"}}
+    <div class="card border-secondary mb-3" style="max-width: 20rem;">
+        <div class="card-header">Account Info</div>
+        <div class="card-body">
+            <h5 class="card-title">Email</h5>
+            <p class="card-text">{{.Email}}</p>
+        </div>
+        <div class="card-footer text-muted">
+           Created at: {{.CreatedAt}}
+        </div>
+    </div>
+{{end}}
