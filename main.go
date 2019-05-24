@@ -26,6 +26,7 @@ func main() {
 		models.WithUser(config.Pepper, config.HMACKey),
 		models.WithGallery(),
 		models.WithImage(),
+		models.WithProperty(),
 	)
 
 	mailConfig := config.Mailgun
@@ -124,5 +125,8 @@ func main() {
 
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 
+	// Properties router
+
+	// End of properties router
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), csrfMw(userMw.Apply(r))))
 }

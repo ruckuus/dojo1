@@ -3,10 +3,11 @@ package models
 import "github.com/jinzhu/gorm"
 
 type Services struct {
-	User    UserService
-	Gallery GalleryService
-	Image   ImageService
-	db      *gorm.DB
+	User     UserService
+	Gallery  GalleryService
+	Image    ImageService
+	Property PropertyService
+	db       *gorm.DB
 }
 
 type ServicesConfig func(*Services) error
@@ -60,6 +61,13 @@ func WithImage() ServicesConfig {
 	}
 }
 
+func WithProperty() ServicesConfig {
+	return func(s *Services) error {
+		s.Property = NewPropertyService(s.db)
+		return nil
+	}
+}
+
 // I will keep this commented, for future reference
 //func NewServices(dialect, connectionInfo string) (*Services, error) {
 //
@@ -83,11 +91,11 @@ func (s *Services) Close() error {
 }
 
 func (s *Services) AutoMigrate() error {
-	return s.db.AutoMigrate(&User{}, &Gallery{}, &pwReset{}).Error
+	return s.db.AutoMigrate(&User{}, &Gallery{}, &pwReset{}, &Property{}).Error
 }
 
 func (s *Services) DestructiveReset() error {
-	err := s.db.DropTableIfExists(&User{}, &Gallery{}, &pwReset{}).Error
+	err := s.db.DropTableIfExists(&User{}, &Gallery{}, &pwReset{}, &Property{}).Error
 	if err != nil {
 		return err
 	}
