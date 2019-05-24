@@ -1,55 +1,44 @@
 {{define "yield"}}
-    <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-            <h2>Edit your gallery</h2>
-            <a href="/galleries/{{.ID}}">
-                View this gallery
-            </a>
-            <hr>
+    <div class="card mb-3">
+        <h3 class="card-header">Edit gallery</h3>
+        <div class="card-body">
+            <a class="card-link" href="/galleries/{{.ID}}">View this gallery</a>
         </div>
-        <div class="col-md-12">
+        <div class="card-body">
             {{template "editGalleryForm" .}}
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-1">
-            <label class="control-label pull-right">
-                Images
-            </label>
-        </div>
-        <div class="col-md-10">
-            {{template "galleryImages" .}}
+
+    <div class="card mb-3">
+        <h3 class="card-header">Gallery images</h3>
+        <div class="card-body">
+            {{ template "galleryImages" .}}
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            {{template "uploadImageForm" .}}
+
+    <div class="card mb-3">
+        <h3 class="card-header">Upload images</h3>
+        <div class="card-body">
+            {{ template "uploadImageForm" .}}
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-            <h3>Dangerous buttons...</h3>
-            <hr>
-        </div>
-        <div class="col-md-12">
-            {{template "deleteGalleryForm" .}}
+    <div class="card mb-3">
+        <h3 class="card-header">Delete gallery</h3>
+        <div class="card-body">
+            {{ template "deleteGalleryForm" .}}
         </div>
     </div>
+
 {{end}}
 
 {{define "editGalleryForm"}}
-    <form action="/galleries/{{.ID}}/update" method="POST"
-          class="form-horizontal">
+    <form action="/galleries/{{.ID}}/update" method="POST">
         {{csrfField}}
         <div class="form-group">
-            <label for="title" class="col-md-1 control-label">Title</label>
-            <div class="col-md-10">
-                <input type="text" name="title" class="form-control" id="title"
+            <label for="title" class="h5">Title</label>
+            <input type="text" name="title" class="form-control" id="title"
                        placeholder="What is the title of your gallery?" value="{{.Title}}">
-            </div>
-            <div class="col-md-1">
-                <button type="submit" class="btn btn-default">Save</button>
-            </div>
+            <button type="submit" class="btn btn-default btn-secondary">Save</button>
         </div>
     </form>
 {{end}}
@@ -60,7 +49,7 @@
         {{csrfField}}
         <div class="form-group">
             <div class="col-md-10 col-md-offset-1">
-                <button type="submit" class="btn btn-danger">Delete</button>
+                <button type="submit" class="btn btn-danger">DELETE THIS GALLERY</button>
             </div>
         </div>
     </form>
@@ -71,12 +60,10 @@
           enctype="multipart/form-data" class="form-horizontal">
         {{csrfField}}
         <div class="form-group">
-            <label for="images" class="col-md-1 control-label">Add Images</label>
-            <div class="col-md-10">
+            <label for="images" class="h5">Add Images</label>
                 <input type="file" multiple="multiple" id="images" name="images">
                 <p class="help-block">Please only use jpg, jpeg, and png.</p>
                 <button type="submit" class="btn btn-default">Upload</button>
-            </div>
         </div>
     </form>
 {{end}}
@@ -86,7 +73,7 @@
         <div class="col-md-2">
             {{range .}}
                 <a href="{{.Path}}">
-                    <img src="{{.Path}}" class="thumbnail">
+                    <img style="height: 200px; width: 100%; display: block;" src="{{.Path}}">
                     {{template "deleteImageForm" .}}
                 </a>
             {{end}}
