@@ -64,6 +64,7 @@ func main() {
 	userC := controllers.NewUsers(services.User, emailer)
 	staticC := controllers.NewStatic()
 	galleriesC := controllers.NewGalleries(services.Gallery, r, services.Image)
+	propertiesC := controllers.NewProperties(services.Property, r)
 
 	newGallery := requireUserMw.Apply(galleriesC.NewView)
 	createGallery := requireUserMw.ApplyFn(galleriesC.Create)
@@ -126,6 +127,8 @@ func main() {
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 
 	// Properties router
+	r.HandleFunc("/properties/new", requireUserMw.ApplyFn(propertiesC.New)).Methods("GET")
+	r.HandleFunc("/properties", requireUserMw.ApplyFn(propertiesC.Create)).Methods("POST")
 
 	// End of properties router
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), csrfMw(userMw.Apply(r))))
