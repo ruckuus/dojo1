@@ -1,0 +1,33 @@
+{{define "yield"}}
+    <form method="POST" action="/properties/{{.ID}}/update">
+        {{csrfField}}
+        <fieldset>
+            <legend>Update property</legend>
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" name="name" aria-describedby="propertyNameHelp" placeholder="Enter property name." value="{{.Name}}">
+                <small id="propertyNameHelp" class="form-text text-muted">Your property name, example: Home Sweet Home.</small>
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea class="form-control" id="address" name="address" rows="3">{{.Address}}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="postal_code">Postal Code</label>
+                <input type="text" class="form-control" id="postal_code" name="postal_code" aria-describedby="propertyPostalCodeHelp" placeholder="Enter property postal code." value="{{.PostalCode}}">
+                <small id="propertyPostalCodeHelp" class="form-text text-muted">Your property postal code, example: 210100</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </fieldset>
+    </form>
+    {{template "deleteProperty"}}
+{{end}}
+
+{{define "deleteProperty"}}
+    <div class="row" style="padding-top: 50px">
+        <form method="POST" action="/properties/{{.ID}}/delete">
+            {{csrfField}}
+            <button type="submit" class="btn btn-danger">Delete This Property</button>
+        </form>
+    </div>
+{{end}}

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/context"
 	"github.com/ruckuus/dojo1/models"
@@ -19,6 +20,7 @@ type Properties struct {
 	NewView   *views.View
 	IndexView *views.View
 	ShowView  *views.View
+	EditView  *views.View
 	ps        models.PropertyService
 	r         *mux.Router
 }
@@ -38,6 +40,7 @@ func NewProperties(services models.PropertyService, r *mux.Router) *Properties {
 		NewView:   views.NewView("bootstrap", "properties/new"),
 		IndexView: views.NewView("bootstrap", "properties/index"),
 		ShowView:  views.NewView("bootstrap", "properties/show"),
+		EditView:  views.NewView("bootstrap", "properties/edit"),
 		ps:        services,
 		r:         r,
 	}
@@ -74,13 +77,10 @@ func (p *Properties) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.SetSuccessMessage("Successfully created new property")
-	p.NewView.Render(w, r, vd)
-
-	//views.RedirectAlert(w, r, "/properties", http.StatusFound, views.Alert{
-	//	Level: views.AlertLvlSuccess,
-	//	Message: "Successfully creating property",
-	//})
+	views.RedirectAlert(w, r, fmt.Sprintf("/properties/%d", property.ID), http.StatusFound, views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Successfully created property",
+	})
 }
 
 func (p *Properties) Index(w http.ResponseWriter, r *http.Request) {
@@ -131,4 +131,67 @@ func (p *Properties) Show(w http.ResponseWriter, r *http.Request) {
 	}
 	vd.Yield = property
 	p.ShowView.Render(w, r, vd)
+}
+
+// Edit handles GET /properties/:id/edit
+func (p *Properties) Edit(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
+
+	property, err := p.propertyByID(w, r)
+	if err != nil {
+		return
+	}
+
+	user := context.User(r.Context())
+
+	if property.UserID != user.ID {
+		http.Error(w, "Error updating property, user mismatch", http.StatusForbidden)
+		return
+	}
+
+	vd.Yield = property
+
+	p.EditView.Render(w, r, vd)
+}
+
+// Update handles POST /properties/:id/update
+func (p *Properties) Update(w http.ResponseWriter, r *http.Request) {
+	property, err := p.propertyByID(w, r)
+	if err != nil {
+		http.Error(w, "error updating property", http.StatusBadRequest)
+		return
+	}
+
+	user := context.User(r.Context())
+
+	if property.UserID != user.ID {
+		http.Error(w, "error updating property, user mismatch", http.StatusForbidden)
+		return
+	}
+
+	var vd views.Data
+	vd.Yield = property
+
+	var form PropertyForm
+	if err := parseForm(r, &form); err != nil {
+		vd.SetAlert(err)
+		p.EditView.Render(w, r, vd)
+		return
+	}
+
+	property.Name = form.Name
+	property.Address = form.Address
+	property.PostalCode = form.PostalCode
+
+	err = p.ps.Update(property)
+	if err != nil {
+		vd.SetAlert(err)
+		p.EditView.Render(w, r, vd)
+		return
+	}
+
+	views.RedirectAlert(w, r, fmt.Sprintf("/properties/%d", property.ID), http.StatusFound, views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Property updated successfully.",
+	})
 }

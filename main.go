@@ -135,6 +135,11 @@ func main() {
 		Methods("GET").Name(controllers.IndexProperties)
 	r.HandleFunc("/properties/{id:[0-9]+}", requireUserMw.ApplyFn(propertiesC.Show)).
 		Methods("GET")
+	r.HandleFunc("/properties/{id:[0-9]+}/edit", requireUserMw.ApplyFn(propertiesC.Edit)).
+		Methods("GET")
+
+	r.HandleFunc("/properties/{id:[0-9]+}/update", requireUserMw.ApplyFn(propertiesC.Update)).
+		Methods("POST")
 
 	// End of properties router
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), csrfMw(userMw.Apply(r))))

@@ -22,7 +22,7 @@ type PropertyDB interface {
 	ByID(id uint) (*Property, error)
 	ByUserID(id uint) ([]Property, error)
 	Create(property *Property) error
-	//Update(property *Property) error
+	Update(property *Property) error
 	//Delete(property *Property) error
 }
 
@@ -86,6 +86,10 @@ func (pg *propertyGorm) Create(p *Property) error {
 	return pg.db.Create(p).Error
 }
 
+func (pg *propertyGorm) Update(p *Property) error {
+	return pg.db.Save(p).Error
+}
+
 // Validator implementation
 func (pv *propertyValidator) Create(p *Property) error {
 	if err := runPropertyValFns(p,
@@ -96,6 +100,17 @@ func (pv *propertyValidator) Create(p *Property) error {
 		return err
 	}
 	return pv.PropertyDB.Create(p)
+}
+
+func (pv *propertyValidator) Update(p *Property) error {
+	if err := runPropertyValFns(p,
+		pv.userIDRequired,
+		pv.propertyNameRequired,
+		pv.propertyAddressRequired,
+		pv.postalCodeRequired); err != nil {
+		return err
+	}
+	return pv.PropertyDB.Update(p)
 }
 
 // Validation functions
