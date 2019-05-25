@@ -8,10 +8,19 @@
             <div class="col-sm-1"></div>
             <div class="col-md-4">
                 <p class="text-primary">{{.Address}}, {{.PostalCode}}</p>
+                <span class="badge badge-success">Currently leased until Dec 2020</span>
+            </div>
+        </div>
+        <div class="row" style="padding-top: 10px">
+            <div class="col-sm-1"></div>
+            <div class="col-md-4">
                 <a href="/properties/{{.ID}}/edit" class="btn btn-primary">Manage</a>
             </div>
         </div>
         <div class="row" style="padding-top: 50px">
+            <div class="col-md-4">
+                {{template "panelDocuments"}}
+            </div>
             <div class="col-md-4">
                 {{template "panelTickets"}}
             </div>
@@ -21,22 +30,33 @@
         </div>
     </div>
 {{end}}
+{{define "panelDocuments"}}
+    <div class="card border-primary mb-3">
+        <div class="card-body">
+        <h4 class="card-title">Documents</h4>
+            <p class="card-text">Store and manage your housing documents such as copy of tenancy agreement, stamp duty, etc.</p>
 
+            <a href="#" class="card-link">View Documents</a>
+        </div>
+    </div>
+{{end}}
 {{define "panelTickets"}}
     <div class="card border-primary mb-3">
-        <div class="card-header">Tickets</div>
         <div class="card-body">
-        <h4 class="card-title">100 issues reported</h4>
+        <h4 class="card-title">Tickets</h4>
             <p class="card-text">Track issues happened in your house, never lose sleep.</p>
+
+            <a href="#" class="card-link">View Tickets</a>
         </div>
     </div>
 {{end}}
 {{define "panelUpcoming"}}
     <div class="card border-primary mb-3">
-        <div class="card-header">Upcoming</div>
         <div class="card-body">
-        <h4 class="card-title">Schedule activity</h4>
+        <h4 class="card-title">Schedules</h4>
             <p class="card-text">Aircon service next July.</p>
+
+            <a href="#" class="card-link">View schedules</a>
         </div>
     </div>
 {{end}}
