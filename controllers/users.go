@@ -265,7 +265,7 @@ func (u *Users) CompleteReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.signIn(w, user)
-	views.RedirectAlert(w, r, "/galleries", http.StatusFound, views.Alert{
+	views.RedirectAlert(w, r, "/properties", http.StatusFound, views.Alert{
 		Level:   views.AlertLvlSuccess,
 		Message: "Your password has been reset and you have been logged in.",
 	})
