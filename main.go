@@ -127,8 +127,14 @@ func main() {
 	// userMw.Apply(r) lets User Middleware to execute before the routes
 
 	// Properties router
-	r.HandleFunc("/properties/new", requireUserMw.ApplyFn(propertiesC.New)).Methods("GET")
-	r.HandleFunc("/properties", requireUserMw.ApplyFn(propertiesC.Create)).Methods("POST")
+	r.HandleFunc("/properties/new", requireUserMw.ApplyFn(propertiesC.New)).
+		Methods("GET")
+	r.HandleFunc("/properties", requireUserMw.ApplyFn(propertiesC.Create)).
+		Methods("POST")
+	r.HandleFunc("/properties", requireUserMw.ApplyFn(propertiesC.Index)).
+		Methods("GET").Name(controllers.IndexProperties)
+	r.HandleFunc("/properties/{id:[0-9]+}", requireUserMw.ApplyFn(propertiesC.Show)).
+		Methods("GET")
 
 	// End of properties router
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), csrfMw(userMw.Apply(r))))

@@ -20,7 +20,7 @@ type Property struct {
 // accessible from outside model package
 type PropertyDB interface {
 	ByID(id uint) (*Property, error)
-	//ByUserID(id uint) (*Property, error)
+	ByUserID(id uint) ([]Property, error)
 	Create(property *Property) error
 	//Update(property *Property) error
 	//Delete(property *Property) error
@@ -70,6 +70,16 @@ func (pg *propertyGorm) ByID(id uint) (*Property, error) {
 		return nil, err
 	}
 	return &property, nil
+}
+
+func (pg *propertyGorm) ByUserID(id uint) ([]Property, error) {
+	var properties []Property
+	db := pg.db.Where("user_id = ?", id)
+	err := db.Find(&properties).Error
+	if err != nil {
+		return nil, err
+	}
+	return properties, nil
 }
 
 func (pg *propertyGorm) Create(p *Property) error {

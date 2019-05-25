@@ -1,0 +1,42 @@
+{{define "yield"}}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-1"><i class="fas fa-home fa-userx"></i></div>
+            <div class="col-md-4"><h2>{{.Name}}</h2></div>
+        </div>
+        <div class="row">
+            <div class="col-sm-1"></div>
+            <div class="col-md-4">
+                <p class="text-primary">{{.Address}}, {{.PostalCode}}</p>
+                <a href="/properties/{{.ID}}/edit" class="btn btn-primary">Manage</a>
+            </div>
+        </div>
+        <div class="row" style="padding-top: 50px">
+            <div class="col-md-4">
+                {{template "panelTickets"}}
+            </div>
+            <div class="col-md-4">
+                {{template "panelUpcoming"}}
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "panelTickets"}}
+    <div class="card border-primary mb-3">
+        <div class="card-header">Tickets</div>
+        <div class="card-body">
+        <h4 class="card-title">100 issues reported</h4>
+            <p class="card-text">Track issues happened in your house, never lose sleep.</p>
+        </div>
+    </div>
+{{end}}
+{{define "panelUpcoming"}}
+    <div class="card border-primary mb-3">
+        <div class="card-header">Upcoming</div>
+        <div class="card-body">
+        <h4 class="card-title">Schedule activity</h4>
+            <p class="card-text">Aircon service next July.</p>
+        </div>
+    </div>
+{{end}}

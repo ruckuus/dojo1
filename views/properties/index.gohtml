@@ -1,0 +1,17 @@
+{{define "yield"}}
+    {{range .}}
+        <div class="card border-secondary mb-1" style="max-width: 50rem;">
+            <div class="card-header"><span class="fas fa-home"/></div>
+            <div class="card-body">
+                <h4 class="card-title">{{.Name}}</h4>
+                <p class="card-text">{{.Address}} - {{.PostalCode}}</p>
+            </div>
+            <div class="card-body">
+                <a href="/properties/{{.ID}}" class="card-link">View Details</a>
+            </div>
+            <div class="card-footer text-muted">
+                last update: {{.UpdatedAt}}
+            </div>
+        </div>
+    {{end}}
+{{end}}
