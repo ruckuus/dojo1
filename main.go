@@ -140,6 +140,8 @@ func main() {
 
 	r.HandleFunc("/properties/{id:[0-9]+}/update", requireUserMw.ApplyFn(propertiesC.Update)).
 		Methods("POST")
+	r.HandleFunc("/properties/{id:[0-9]+}/delete", requireUserMw.ApplyFn(propertiesC.Delete)).
+		Methods("POST")
 
 	// End of properties router
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), csrfMw(userMw.Apply(r))))

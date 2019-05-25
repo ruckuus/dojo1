@@ -23,7 +23,7 @@ type PropertyDB interface {
 	ByUserID(id uint) ([]Property, error)
 	Create(property *Property) error
 	Update(property *Property) error
-	//Delete(property *Property) error
+	Delete(id uint) error
 }
 
 // PropertyService has the same method as
@@ -90,6 +90,11 @@ func (pg *propertyGorm) Update(p *Property) error {
 	return pg.db.Save(p).Error
 }
 
+func (pg *propertyGorm) Delete(id uint) error {
+	property := Property{Model: gorm.Model{ID: id}}
+	return pg.db.Delete(&property).Error
+}
+
 // Validator implementation
 func (pv *propertyValidator) Create(p *Property) error {
 	if err := runPropertyValFns(p,
@@ -111,6 +116,16 @@ func (pv *propertyValidator) Update(p *Property) error {
 		return err
 	}
 	return pv.PropertyDB.Update(p)
+}
+
+func (pv *propertyValidator) Delete(id uint) error {
+	var property Property
+	property.ID = id
+	if err := runPropertyValFns(&property, pv.nonZeroID); err != nil {
+		return err
+	}
+	return pv.PropertyDB.Delete(id)
+
 }
 
 // Validation functions
@@ -138,6 +153,13 @@ func (pv *propertyValidator) propertyAddressRequired(p *Property) error {
 func (pv *propertyValidator) postalCodeRequired(p *Property) error {
 	if p.PostalCode == "" {
 		return ErrPostalCodeRequired
+	}
+	return nil
+}
+
+func (pv *propertyValidator) nonZeroID(p *Property) error {
+	if p.ID <= 0 {
+		return ErrIDInvalid
 	}
 	return nil
 }

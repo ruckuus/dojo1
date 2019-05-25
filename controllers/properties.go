@@ -195,3 +195,33 @@ func (p *Properties) Update(w http.ResponseWriter, r *http.Request) {
 		Message: "Property updated successfully.",
 	})
 }
+
+// Delete handles POST /properties/:id/delete
+func (p *Properties) Delete(w http.ResponseWriter, r *http.Request) {
+	property, err := p.propertyByID(w, r)
+	if err != nil {
+		http.Error(w, "Error deleting property", http.StatusBadRequest)
+		return
+	}
+
+	user := context.User(r.Context())
+	if property.UserID != user.ID {
+		http.Error(w, "Error deleting property, user mismatch", http.StatusForbidden)
+		return
+	}
+
+	var vd views.Data
+	err = p.ps.Delete(property.ID)
+
+	if err != nil {
+		vd.SetAlert(err)
+		vd.Yield = property
+		p.EditView.Render(w, r, vd)
+		return
+	}
+
+	views.RedirectAlert(w, r, "/properties", http.StatusFound, views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Successfully deleted property.",
+	})
+}
