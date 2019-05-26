@@ -23,7 +23,7 @@ func main() {
 	config := LoadConfig(*runProd)
 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(config.AWSRegion),
+		Region: aws.String(config.AWSConfig.AWSRegion),
 	})
 
 	services, err := models.NewServices(
@@ -31,7 +31,7 @@ func main() {
 		models.WithLogMode(!config.IsProd()),
 		models.WithUser(config.Pepper, config.HMACKey),
 		models.WithAWSSession(sess),
-		models.WithS3Bucket(config.S3Bucket),
+		models.WithS3Bucket(config.AWSConfig.S3Bucket),
 		models.WithStore(config.RootPath),
 		models.WithGallery(),
 		models.WithImage(),

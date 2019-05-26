@@ -14,10 +14,7 @@ type Config struct {
 	Database  PostgresConfig `json:"database"`
 	Mailgun   MailgunConfig  `json:"mailgun"`
 	RootPath  string         `json:"root_path"`
-	S3Bucket  string         `json:"s3_bucket"`
-	AWSKey    string         `json:"aws_key"`
-	AWSSecret string         `json:"aws_secret"`
-	AWSRegion string         `json:"aws_region"`
+	AWSConfig AWSConfig      `json:"aws_config"`
 }
 
 type MailgunConfig struct {
@@ -32,13 +29,13 @@ func (c Config) IsProd() bool {
 
 func DefaultConfig() Config {
 	return Config{
-		Port:     3000,
-		Env:      "dev",
-		HMACKey:  "SuperSecret2019!$",
-		Pepper:   "HALUSINOGEN2019$$",
-		Database: DefaultPostgresConfig(),
-		RootPath: "./",
-		S3Bucket: "images",
+		Port:      3000,
+		Env:       "dev",
+		HMACKey:   "SuperSecret2019!$",
+		Pepper:    "HALUSINOGEN2019$$",
+		Database:  DefaultPostgresConfig(),
+		RootPath:  "./",
+		AWSConfig: DefaultAWSConfig(),
 	}
 }
 
@@ -48,6 +45,13 @@ type PostgresConfig struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Name     string `json:"name"`
+}
+
+type AWSConfig struct {
+	S3Bucket  string `json:"s3_bucket"`
+	AWSKey    string `json:"aws_key"`
+	AWSSecret string `json:"aws_secret"`
+	AWSRegion string `json:"aws_region"`
 }
 
 func (p PostgresConfig) Dialect() string {
@@ -72,6 +76,15 @@ func DefaultPostgresConfig() PostgresConfig {
 		User:     "lenslocked_user",
 		Password: "lenslocked_password",
 		Name:     "lenslocked_db",
+	}
+}
+
+func DefaultAWSConfig() AWSConfig {
+	return AWSConfig{
+		AWSRegion: "ap-southeast",
+		AWSKey:    "XXXX",
+		AWSSecret: "XXXX",
+		S3Bucket:  "images",
 	}
 }
 
