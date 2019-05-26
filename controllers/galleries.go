@@ -258,10 +258,13 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 
 		err = g.is.Create(gallery.ID, file, f.Filename)
 		if err != nil {
-			http.Redirect(w, r, "/galleries", http.StatusFound)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		http.Redirect(w, r, url.Path, http.StatusFound)
 		return
 	}

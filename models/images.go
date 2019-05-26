@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/ruckuus/dojo1/store"
 	"io"
 	"net/url"
 	"os"
@@ -39,39 +40,25 @@ type ImageService interface {
 	Delete(i *Image) error
 }
 
-type imageService struct{}
+type imageService struct {
+	Storage store.Storage
+}
 
-func NewImageService() ImageService {
-	return &imageService{}
+func NewImageService(storage store.Storage) ImageService {
+	return &imageService{
+		storage,
+	}
 }
 
 func (im *imageService) imagePath(galleryID uint) string {
 	return filepath.Join("images", "galleries", fmt.Sprintf("%v", galleryID))
 }
 
-func (im *imageService) mkImagePath(galleryID uint) (string, error) {
-	galleryPath := im.imagePath(galleryID)
-	err := os.MkdirAll(galleryPath, 0755)
-	if err != nil {
-		return "", err
-	}
-
-	return galleryPath, nil
-}
-
 func (im *imageService) Create(galleryID uint, r io.Reader, filename string) error {
-	path, err := im.mkImagePath(galleryID)
-	if err != nil {
-		return err
-	}
+	galleryPath := im.imagePath(galleryID)
 
-	dst, err := os.Create(filepath.Join(path, filename))
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
+	err := im.Storage.FileSystemStore(galleryPath, filename, r)
 
-	_, err = io.Copy(dst, r)
 	if err != nil {
 		return err
 	}

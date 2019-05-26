@@ -7,12 +7,17 @@ import (
 )
 
 type Config struct {
-	Port     int            `json:"port"`
-	Env      string         `json:"env"`
-	HMACKey  string         `json:"hmac_key"`
-	Pepper   string         `json:"pepper"`
-	Database PostgresConfig `json:"database"`
-	Mailgun  MailgunConfig  `json:"mailgun"`
+	Port      int            `json:"port"`
+	Env       string         `json:"env"`
+	HMACKey   string         `json:"hmac_key"`
+	Pepper    string         `json:"pepper"`
+	Database  PostgresConfig `json:"database"`
+	Mailgun   MailgunConfig  `json:"mailgun"`
+	RootPath  string         `json:"root_path"`
+	S3Bucket  string         `json:"s3_bucket"`
+	AWSKey    string         `json:"aws_key"`
+	AWSSecret string         `json:"aws_secret"`
+	AWSRegion string         `json:"aws_region"`
 }
 
 type MailgunConfig struct {
@@ -32,6 +37,8 @@ func DefaultConfig() Config {
 		HMACKey:  "SuperSecret2019!$",
 		Pepper:   "HALUSINOGEN2019$$",
 		Database: DefaultPostgresConfig(),
+		RootPath: "./",
+		S3Bucket: "images",
 	}
 }
 

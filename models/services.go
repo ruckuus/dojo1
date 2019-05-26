@@ -1,13 +1,20 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/jinzhu/gorm"
+	"github.com/ruckuus/dojo1/store"
+)
 
 type Services struct {
-	User     UserService
-	Gallery  GalleryService
-	Image    ImageService
-	Property PropertyService
-	db       *gorm.DB
+	User       UserService
+	Gallery    GalleryService
+	Image      ImageService
+	Property   PropertyService
+	db         *gorm.DB
+	AWSSession *session.Session
+	S3Bucket   string
+	Store      store.Storage
 }
 
 type ServicesConfig func(*Services) error
@@ -54,9 +61,31 @@ func WithGallery() ServicesConfig {
 	}
 }
 
+func WithAWSSession(sess *session.Session) ServicesConfig {
+	return func(s *Services) error {
+		s.AWSSession = sess
+		return nil
+	}
+}
+
+func WithS3Bucket(bucketName string) ServicesConfig {
+	return func(s *Services) error {
+		s.S3Bucket = bucketName
+		return nil
+	}
+}
+
+func WithStore(rootPath string) ServicesConfig {
+	return func(s *Services) error {
+		storage := store.NewStore(rootPath, s.AWSSession, s.S3Bucket)
+		s.Store = storage
+		return nil
+	}
+}
+
 func WithImage() ServicesConfig {
 	return func(s *Services) error {
-		s.Image = NewImageService()
+		s.Image = NewImageService(s.Store)
 		return nil
 	}
 }

@@ -220,6 +220,7 @@ func (p *Properties) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// FIXME: alert is not shown in /properties page
 	views.RedirectAlert(w, r, "/properties", http.StatusFound, views.Alert{
 		Level:   views.AlertLvlSuccess,
 		Message: "Successfully deleted property.",

@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/ruckuus/dojo1/controllers"
@@ -20,10 +22,17 @@ func main() {
 
 	config := LoadConfig(*runProd)
 
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(config.AWSRegion),
+	})
+
 	services, err := models.NewServices(
 		models.WithGorm(config.Database.Dialect(), config.Database.ConnectionInfo()),
 		models.WithLogMode(!config.IsProd()),
 		models.WithUser(config.Pepper, config.HMACKey),
+		models.WithAWSSession(sess),
+		models.WithS3Bucket(config.S3Bucket),
+		models.WithStore(config.RootPath),
 		models.WithGallery(),
 		models.WithImage(),
 		models.WithProperty(),
