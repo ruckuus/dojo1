@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -64,22 +63,23 @@ func (s *store) FileSystemStore(dir, filename string, body io.Reader) error {
 
 func (s *store) S3Store(path, filename string, body io.Reader) error {
 	var b bytes.Buffer
-	length, err := b.ReadFrom(body)
+	_, err := b.ReadFrom(body)
 	if err != nil {
 		return err
 	}
 
 	fullPath := filepath.Join(path, filename)
 
-	_, err = s3.New(s.AWSSession).PutObject(&s3.PutObjectInput{
-		Bucket:             aws.String(s.S3Bucket),
-		Key:                aws.String(fullPath),
-		ACL:                aws.String("private"),
-		Body:               bytes.NewReader(b.Bytes()),
-		ContentLength:      aws.Int64(length),
-		ContentType:        aws.String(http.DetectContentType(b.Bytes())),
-		ContentDisposition: aws.String("attachment"),
+	uploader := s3manager.NewUploader(s.AWSSession)
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(s.S3Bucket),
+		Key:    aws.String(fullPath),
+		Body:   bytes.NewReader(b.Bytes()),
 	})
+
+	if err != nil {
+		return err
+	}
 
 	return err
 }
