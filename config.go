@@ -7,14 +7,15 @@ import (
 )
 
 type Config struct {
-	Port      int            `json:"port"`
-	Env       string         `json:"env"`
-	HMACKey   string         `json:"hmac_key"`
-	Pepper    string         `json:"pepper"`
-	Database  PostgresConfig `json:"database"`
-	Mailgun   MailgunConfig  `json:"mailgun"`
-	RootPath  string         `json:"root_path"`
-	AWSConfig AWSConfig      `json:"aws_config"`
+	Port        int            `json:"port"`
+	Env         string         `json:"env"`
+	HMACKey     string         `json:"hmac_key"`
+	Pepper      string         `json:"pepper"`
+	Database    PostgresConfig `json:"database"`
+	Mailgun     MailgunConfig  `json:"mailgun"`
+	RootPath    string         `json:"root_path"`
+	AWSConfig   AWSConfig      `json:"aws_config"`
+	StorageType string         `json:"storage_type"`
 }
 
 type MailgunConfig struct {
@@ -29,13 +30,14 @@ func (c Config) IsProd() bool {
 
 func DefaultConfig() Config {
 	return Config{
-		Port:      3000,
-		Env:       "dev",
-		HMACKey:   "SuperSecret2019!$",
-		Pepper:    "HALUSINOGEN2019$$",
-		Database:  DefaultPostgresConfig(),
-		RootPath:  "./",
-		AWSConfig: DefaultAWSConfig(),
+		Port:        3000,
+		Env:         "dev",
+		HMACKey:     "SuperSecret2019!$",
+		Pepper:      "HALUSINOGEN2019$$",
+		Database:    DefaultPostgresConfig(),
+		RootPath:    "./",
+		AWSConfig:   DefaultAWSConfig(),
+		StorageType: "filesystem",
 	}
 }
 

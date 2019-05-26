@@ -23,8 +23,7 @@ func main() {
 	config := LoadConfig(*runProd)
 
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region:   aws.String(config.AWSConfig.Region),
-		Endpoint: aws.String("http://localhost:4572"),
+		Region: aws.String(config.AWSConfig.Region),
 	}))
 
 	services, err := models.NewServices(
@@ -34,6 +33,7 @@ func main() {
 		models.WithAWSSession(sess),
 		models.WithS3Bucket(config.AWSConfig.Bucket),
 		models.WithStore(config.RootPath),
+		models.WithStorageType(config.StorageType),
 		models.WithGallery(),
 		models.WithImage(),
 		models.WithProperty(),

@@ -6,14 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
 )
 
 type Storage interface {
-	FileSystemStore(path, filename string, body io.Reader) error
-	S3Store(path, filename string, body io.Reader) error
+	Store(storageType, path, filename string, body io.Reader) (string, error)
+	FileSystemStore(path, filename string, body io.Reader) (string, error)
+	S3Store(path, filename string, body io.Reader) (string, error)
 }
 
 type store struct {
@@ -40,32 +42,44 @@ func (s *store) mkImagePath(inputPath string) (string, error) {
 	return finalPath, nil
 }
 
-func (s *store) FileSystemStore(dir, filename string, body io.Reader) error {
-	fmt.Println("Received filePath: ", dir)
+func (s *store) Store(storageType, path, filename string, body io.Reader) (string, error) {
+	switch storageType {
+	case "filesystem":
+		return s.FileSystemStore(path, filename, body)
+	case "s3":
+		return s.S3Store(path, filename, body)
+	default:
+		return "", errors.New(fmt.Sprintf("Not implemented: %s", storageType))
+	}
+}
+
+func (s *store) FileSystemStore(dir, filename string, body io.Reader) (string, error) {
 	imagePath, err := s.mkImagePath(dir)
+	fmt.Print("Image Path: ", imagePath, " <<<<<")
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	dst, err := os.Create(filepath.Join(imagePath, filename))
+	fullPath := filepath.Join(imagePath, filename)
+	dst, err := os.Create(fullPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer dst.Close()
 
 	_, err = io.Copy(dst, body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return fullPath, nil
 }
 
-func (s *store) S3Store(path, filename string, body io.Reader) error {
+func (s *store) S3Store(path, filename string, body io.Reader) (string, error) {
 	var b bytes.Buffer
 	_, err := b.ReadFrom(body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	fullPath := filepath.Join(path, filename)
@@ -78,8 +92,8 @@ func (s *store) S3Store(path, filename string, body io.Reader) error {
 	})
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return err
+	return fullPath, nil
 }

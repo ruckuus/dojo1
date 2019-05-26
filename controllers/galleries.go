@@ -113,7 +113,7 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 		}
 		return nil, err
 	}
-	images, err := g.is.ByGalleryID(gallery.ID)
+	images, err := g.is.ByExternalTypeAndID("galleries", gallery.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil, err
@@ -256,7 +256,7 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		err = g.is.Create(gallery.ID, file, f.Filename)
+		err = g.is.Create("galleries", gallery.ID, file, f.Filename)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -287,8 +287,8 @@ func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
 	filename := mux.Vars(r)["filename"]
 
 	err = g.is.Delete(&models.Image{
-		GalleryID: gallery.ID,
-		Filename:  filename,
+		ExternalID: gallery.ID,
+		Filename:   filename,
 	})
 
 	// All is well, redirect to the edit gallery page

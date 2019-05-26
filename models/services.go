@@ -7,14 +7,15 @@ import (
 )
 
 type Services struct {
-	User       UserService
-	Gallery    GalleryService
-	Image      ImageService
-	Property   PropertyService
-	db         *gorm.DB
-	AWSSession *session.Session
-	S3Bucket   string
-	Store      store.Storage
+	User        UserService
+	Gallery     GalleryService
+	Image       ImageService
+	Property    PropertyService
+	db          *gorm.DB
+	AWSSession  *session.Session
+	S3Bucket    string
+	Store       store.Storage
+	StorageType string
 }
 
 type ServicesConfig func(*Services) error
@@ -83,9 +84,16 @@ func WithStore(rootPath string) ServicesConfig {
 	}
 }
 
+func WithStorageType(storeType string) ServicesConfig {
+	return func(s *Services) error {
+		s.StorageType = storeType
+		return nil
+	}
+}
+
 func WithImage() ServicesConfig {
 	return func(s *Services) error {
-		s.Image = NewImageService(s.Store)
+		s.Image = NewImageService(s.Store, s.db, s.StorageType)
 		return nil
 	}
 }
