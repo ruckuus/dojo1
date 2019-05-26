@@ -22,16 +22,17 @@ func main() {
 
 	config := LoadConfig(*runProd)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(config.AWSConfig.AWSRegion),
-	})
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region:   aws.String(config.AWSConfig.Region),
+		Endpoint: aws.String("http://localhost:4572"),
+	}))
 
 	services, err := models.NewServices(
 		models.WithGorm(config.Database.Dialect(), config.Database.ConnectionInfo()),
 		models.WithLogMode(!config.IsProd()),
 		models.WithUser(config.Pepper, config.HMACKey),
 		models.WithAWSSession(sess),
-		models.WithS3Bucket(config.AWSConfig.S3Bucket),
+		models.WithS3Bucket(config.AWSConfig.Bucket),
 		models.WithStore(config.RootPath),
 		models.WithGallery(),
 		models.WithImage(),

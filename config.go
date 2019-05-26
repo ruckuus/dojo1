@@ -48,10 +48,10 @@ type PostgresConfig struct {
 }
 
 type AWSConfig struct {
-	S3Bucket  string `json:"s3_bucket"`
-	AWSKey    string `json:"aws_key"`
-	AWSSecret string `json:"aws_secret"`
-	AWSRegion string `json:"aws_region"`
+	Bucket          string `json:"bucket"`
+	AccessKeyID     string `json:"access_key_id"`
+	AccessKeySecret string `json:"access_key_secret"`
+	Region          string `json:"region"`
 }
 
 func (p PostgresConfig) Dialect() string {
@@ -81,10 +81,10 @@ func DefaultPostgresConfig() PostgresConfig {
 
 func DefaultAWSConfig() AWSConfig {
 	return AWSConfig{
-		AWSRegion: "ap-southeast",
-		AWSKey:    "XXXX",
-		AWSSecret: "XXXX",
-		S3Bucket:  "images",
+		Region:          "ap-southeast-1",
+		AccessKeyID:     "XXXX",
+		AccessKeySecret: "XXXX",
+		Bucket:          "tataruma-images",
 	}
 }
 
