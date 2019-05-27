@@ -94,25 +94,6 @@ func (im *imageService) Create(image *Image, r io.Reader) error {
 	return nil
 }
 
-func (im *imageService) ByExternalTypeAndID(ExternalType string, ExternalID uint) ([]Image, error) {
-	path := im.imagePath(ExternalType, ExternalID)
-	strings, err := filepath.Glob(filepath.Join(path, "*"))
-	if err != nil {
-		return nil, err
-	}
-
-	// make slice of type Image
-	ret := make([]Image, len(strings))
-	for i, imgPath := range strings {
-		ret[i] = Image{
-			ExternalID:   ExternalID,
-			ExternalType: ExternalType,
-			Filename:     filepath.Base(imgPath),
-		}
-	}
-	return ret, nil
-}
-
 func (im *imageService) Delete(i *Image) error {
 	return os.Remove(i.RelativePath())
 }
@@ -121,8 +102,14 @@ func (ig *imageGorm) Create(image *Image, r io.Reader) error {
 	return ig.db.Create(image).Error
 }
 
-func (ig *imageGorm) ByExternalTypeAndID(ExternalType string, ExternalID uint) ([]Image, error) {
-	return nil, nil
+func (ig *imageGorm) ByExternalTypeAndID(externalType string, externalID uint) ([]Image, error) {
+	var images []Image
+	db := ig.db.Where("external_type = ? AND external_id = ?", externalType, externalID)
+	err := db.Find(&images).Error
+	if err != nil {
+		return nil, err
+	}
+	return images, nil
 }
 
 func (ig *imageGorm) Delete(i *Image) error {
