@@ -128,11 +128,11 @@ func (s *Services) Close() error {
 }
 
 func (s *Services) AutoMigrate() error {
-	return s.db.AutoMigrate(&User{}, &Gallery{}, &pwReset{}, &Property{}).Error
+	return s.db.AutoMigrate(&User{}, &Gallery{}, &pwReset{}, &Property{}, &Image{}).Error
 }
 
 func (s *Services) DestructiveReset() error {
-	err := s.db.DropTableIfExists(&User{}, &Gallery{}, &pwReset{}, &Property{}).Error
+	err := s.db.DropTableIfExists(&User{}, &Gallery{}, &pwReset{}, &Property{}, &Image{}).Error
 	if err != nil {
 		return err
 	}

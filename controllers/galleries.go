@@ -256,7 +256,14 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		err = g.is.Create("galleries", gallery.ID, file, f.Filename)
+		image := models.Image{
+			ExternalType: "galleries",
+			ExternalID:   gallery.ID,
+			Filename:     f.Filename,
+		}
+
+		err = g.is.Create(&image, file)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

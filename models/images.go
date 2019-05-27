@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
 	"github.com/ruckuus/dojo1/store"
 	"io"
 	"net/url"
@@ -44,7 +43,7 @@ type ImageService interface {
 }
 
 type ImageDB interface {
-	Create(externalType string, externalID uint, r io.Reader, filename string) error
+	Create(image *Image, r io.Reader) error
 	ByExternalTypeAndID(ExternalType string, ExternalID uint) ([]Image, error)
 	Delete(i *Image) error
 }
@@ -79,16 +78,19 @@ func (im *imageService) imagePath(externalType string, externalID uint) string {
 	return filepath.Join("images", externalType, fmt.Sprintf("%v", externalID))
 }
 
-func (im *imageService) Create(externalType string, externalID uint, r io.Reader, filename string) error {
-	imagePath := im.imagePath(externalType, externalID)
+func (im *imageService) Create(image *Image, r io.Reader) error {
+	imagePath := im.imagePath(image.ExternalType, image.ExternalID)
 
-	resultPath, err := im.Storage.Store(im.StorageType, imagePath, filename, r)
+	resultPath, err := im.Storage.Store(im.StorageType, imagePath, image.Filename, r)
 
 	if err != nil {
 		return err
 	}
-	// Store in the DB
-	_ = resultPath
+
+	image.Location = resultPath
+
+	err = im.ImageDB.Create(image, r)
+
 	return nil
 }
 
@@ -115,8 +117,8 @@ func (im *imageService) Delete(i *Image) error {
 	return os.Remove(i.RelativePath())
 }
 
-func (ig *imageGorm) Create(externalType string, externalID uint, r io.Reader, filename string) error {
-	return errors.New("Not implemented")
+func (ig *imageGorm) Create(image *Image, r io.Reader) error {
+	return ig.db.Create(image).Error
 }
 
 func (ig *imageGorm) ByExternalTypeAndID(ExternalType string, ExternalID uint) ([]Image, error) {
