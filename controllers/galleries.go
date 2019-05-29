@@ -31,6 +31,7 @@ const (
 	DeleteGallery   = "delete_gallery"
 	IndexGalleries  = "index_galleries"
 	maxMultipartMem = 1 << 20 // 1 MB
+	GalleryImageKey = "galleries"
 )
 
 func NewGalleries(services models.GalleryService, r *mux.Router, is models.ImageService) *Galleries {
@@ -113,7 +114,7 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 		}
 		return nil, err
 	}
-	images, err := g.is.ByExternalTypeAndID("galleries", gallery.ID)
+	images, err := g.is.ByExternalTypeAndID(GalleryImageKey, gallery.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil, err
@@ -257,7 +258,7 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 
 		image := models.Image{
-			ExternalType: "galleries",
+			ExternalType: GalleryImageKey,
 			ExternalID:   gallery.ID,
 			Filename:     f.Filename,
 		}
@@ -294,10 +295,14 @@ func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
 	filename := mux.Vars(r)["filename"]
 
 	err = g.is.Delete(&models.Image{
-		ExternalType: "galleries",
+		ExternalType: GalleryImageKey,
 		ExternalID:   gallery.ID,
 		Filename:     filename,
 	})
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
 	// All is well, redirect to the edit gallery page
 	url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))

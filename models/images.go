@@ -6,7 +6,6 @@ import (
 	"github.com/ruckuus/dojo1/store"
 	"io"
 	"net/url"
-	"os"
 	"path/filepath"
 )
 
@@ -49,8 +48,7 @@ type ImageDB interface {
 }
 
 type imageService struct {
-	StorageType string
-	Storage     store.Storage
+	Storage store.StoreProvider
 	ImageDB
 }
 
@@ -62,15 +60,14 @@ type imageGorm struct {
 	db *gorm.DB
 }
 
-func NewImageService(storage store.Storage, db *gorm.DB, storageType string) ImageService {
+func NewImageService(storage store.StoreProvider, db *gorm.DB, storageType string) ImageService {
 	return &imageService{
 		ImageDB: &imageValidator{
 			ImageDB: &imageGorm{
 				db: db,
 			},
 		},
-		Storage:     storage,
-		StorageType: storageType,
+		Storage: storage,
 	}
 }
 
@@ -81,7 +78,7 @@ func (im *imageService) imagePath(externalType string, externalID uint) string {
 func (im *imageService) Create(image *Image, r io.Reader) error {
 	imagePath := im.imagePath(image.ExternalType, image.ExternalID)
 
-	resultPath, err := im.Storage.Store(im.StorageType, imagePath, image.Filename, r)
+	resultPath, err := im.Storage.Store(imagePath, image.Filename, r)
 
 	if err != nil {
 		return err
@@ -95,15 +92,13 @@ func (im *imageService) Create(image *Image, r io.Reader) error {
 }
 
 func (im *imageService) Delete(i *Image) error {
-	err := os.Remove(i.RelativePath())
+
+	err := im.Storage.Delete(i.Path())
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Relative Path: ", i.RelativePath())
 	i.Location = i.RelativePath()
-
-	fmt.Println("Object: ", i)
 
 	return im.ImageDB.Delete(i)
 }

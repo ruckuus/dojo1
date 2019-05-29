@@ -14,7 +14,7 @@ type Services struct {
 	db          *gorm.DB
 	AWSSession  *session.Session
 	S3Bucket    string
-	Store       store.Storage
+	Store       store.StoreProvider
 	StorageType string
 }
 
@@ -76,17 +76,25 @@ func WithS3Bucket(bucketName string) ServicesConfig {
 	}
 }
 
-func WithStore(rootPath string) ServicesConfig {
+func WithStorageType(storeType string) ServicesConfig {
 	return func(s *Services) error {
-		storage := store.NewStore(rootPath, s.AWSSession, s.S3Bucket)
+		s.StorageType = storeType
+		return nil
+	}
+}
+
+func WithFSStore() ServicesConfig {
+	return func(s *Services) error {
+		storage := store.NewFSStore()
 		s.Store = storage
 		return nil
 	}
 }
 
-func WithStorageType(storeType string) ServicesConfig {
+func WithS3Store() ServicesConfig {
 	return func(s *Services) error {
-		s.StorageType = storeType
+		storage := store.NewS3Store(s.AWSSession, s.S3Bucket)
+		s.Store = storage
 		return nil
 	}
 }
