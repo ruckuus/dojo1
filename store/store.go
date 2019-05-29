@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 	"io"
@@ -16,6 +17,7 @@ type Storage interface {
 	Store(storageType, path, filename string, body io.Reader) (string, error)
 	FileSystemStore(path, filename string, body io.Reader) (string, error)
 	S3Store(path, filename string, body io.Reader) (string, error)
+	Delete(storageType, path, filename string) error
 }
 
 type store struct {
@@ -55,7 +57,6 @@ func (s *store) Store(storageType, path, filename string, body io.Reader) (strin
 
 func (s *store) FileSystemStore(dir, filename string, body io.Reader) (string, error) {
 	imagePath, err := s.mkImagePath(dir)
-	fmt.Print("Image Path: ", imagePath, " <<<<<")
 	if err != nil {
 		return "", err
 	}
@@ -96,4 +97,35 @@ func (s *store) S3Store(path, filename string, body io.Reader) (string, error) {
 	}
 
 	return fullPath, nil
+}
+
+func (s *store) Delete(storageType, path, filename string) error {
+	fullPath := filepath.Join(path, filename)
+	switch storageType {
+	case "filesystem":
+		return os.Remove(fullPath)
+	case "s3":
+		return s.s3Delete(fullPath)
+	default:
+		return errors.New(fmt.Sprintf("Storage type not implemented: %s ", storageType))
+	}
+}
+
+func (s *store) s3Delete(fullPath string) error {
+	batcher := s3manager.NewBatchDelete(s.AWSSession)
+	objects := []s3manager.BatchDeleteObject{
+		{
+			Object: &s3.DeleteObjectInput{
+				Key:    aws.String(fullPath),
+				Bucket: aws.String(s.S3Bucket),
+			},
+		},
+	}
+
+	if err := batcher.Delete(aws.BackgroundContext(), &s3manager.DeleteObjectsIterator{
+		Objects: objects,
+	}); err != nil {
+		return err
+	}
+	return nil
 }

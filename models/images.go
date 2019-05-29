@@ -95,7 +95,17 @@ func (im *imageService) Create(image *Image, r io.Reader) error {
 }
 
 func (im *imageService) Delete(i *Image) error {
-	return os.Remove(i.RelativePath())
+	err := os.Remove(i.RelativePath())
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Relative Path: ", i.RelativePath())
+	i.Location = i.RelativePath()
+
+	fmt.Println("Object: ", i)
+
+	return im.ImageDB.Delete(i)
 }
 
 func (ig *imageGorm) Create(image *Image, r io.Reader) error {
@@ -113,5 +123,12 @@ func (ig *imageGorm) ByExternalTypeAndID(externalType string, externalID uint) (
 }
 
 func (ig *imageGorm) Delete(i *Image) error {
-	return os.Remove(i.RelativePath())
+	var image Image
+	db := ig.db.Where(i)
+	err := db.Find(&image).Error
+	if err != nil {
+		return err
+	}
+
+	return db.Delete(image).Error
 }

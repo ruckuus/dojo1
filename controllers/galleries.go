@@ -294,8 +294,9 @@ func (g *Galleries) ImageDelete(w http.ResponseWriter, r *http.Request) {
 	filename := mux.Vars(r)["filename"]
 
 	err = g.is.Delete(&models.Image{
-		ExternalID: gallery.ID,
-		Filename:   filename,
+		ExternalType: "galleries",
+		ExternalID:   gallery.ID,
+		Filename:     filename,
 	})
 
 	// All is well, redirect to the edit gallery page
