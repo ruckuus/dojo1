@@ -16,6 +16,7 @@ type Services struct {
 	S3Bucket    string
 	Store       store.StoreProvider
 	StorageType string
+	ImageDomain string
 }
 
 type ServicesConfig func(*Services) error
@@ -76,21 +77,6 @@ func WithS3Bucket(bucketName string) ServicesConfig {
 	}
 }
 
-func WithStorageType(storeType string) ServicesConfig {
-	return func(s *Services) error {
-		s.StorageType = storeType
-		return nil
-	}
-}
-
-func WithFSStore() ServicesConfig {
-	return func(s *Services) error {
-		storage := store.NewFSStore()
-		s.Store = storage
-		return nil
-	}
-}
-
 func WithS3Store() ServicesConfig {
 	return func(s *Services) error {
 		storage := store.NewS3Store(s.AWSSession, s.S3Bucket)
@@ -98,10 +84,17 @@ func WithS3Store() ServicesConfig {
 		return nil
 	}
 }
+func WithImageCDNDomain(imageCDNDomain string) ServicesConfig {
+	return func(s *Services) error {
+		s.ImageDomain = imageCDNDomain
+		return nil
+	}
+
+}
 
 func WithImage() ServicesConfig {
 	return func(s *Services) error {
-		s.Image = NewImageService(s.Store, s.db, s.StorageType)
+		s.Image = NewImageService(s.Store, s.db, s.ImageDomain)
 		return nil
 	}
 }

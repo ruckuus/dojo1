@@ -34,6 +34,7 @@ func main() {
 		models.WithS3Bucket(config.AWSConfig.Bucket),
 		models.WithS3Store(),
 		models.WithGallery(),
+		models.WithImageCDNDomain(config.ImageCDNDomain),
 		models.WithImage(),
 		models.WithProperty(),
 	)

@@ -26,7 +26,7 @@ type Image struct {
 
 func (i *Image) Path() string {
 	temp := url.URL{
-		Path: "/" + i.RelativePath(),
+		Path: "//" + i.Location,
 	}
 	return temp.String()
 }
@@ -48,7 +48,8 @@ type ImageDB interface {
 }
 
 type imageService struct {
-	Storage store.StoreProvider
+	ImageDomainName string
+	Storage         store.StoreProvider
 	ImageDB
 }
 
@@ -60,14 +61,15 @@ type imageGorm struct {
 	db *gorm.DB
 }
 
-func NewImageService(storage store.StoreProvider, db *gorm.DB, storageType string) ImageService {
+func NewImageService(storage store.StoreProvider, db *gorm.DB, imageDomainName string) ImageService {
 	return &imageService{
 		ImageDB: &imageValidator{
 			ImageDB: &imageGorm{
 				db: db,
 			},
 		},
-		Storage: storage,
+		Storage:         storage,
+		ImageDomainName: imageDomainName,
 	}
 }
 
@@ -84,7 +86,7 @@ func (im *imageService) Create(image *Image, r io.Reader) error {
 		return err
 	}
 
-	image.Location = resultPath
+	image.Location = filepath.Join(im.ImageDomainName, resultPath)
 
 	err = im.ImageDB.Create(image, r)
 
@@ -103,6 +105,16 @@ func (im *imageService) Delete(i *Image) error {
 	return im.ImageDB.Delete(i)
 }
 
+func (im *imageService) ByExternalTypeAndID(externalType string, externalID uint) ([]Image, error) {
+
+	images, err := im.ImageDB.ByExternalTypeAndID(externalType, externalID)
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
 func (ig *imageGorm) Create(image *Image, r io.Reader) error {
 	return ig.db.Create(image).Error
 }
@@ -114,6 +126,7 @@ func (ig *imageGorm) ByExternalTypeAndID(externalType string, externalID uint) (
 	if err != nil {
 		return nil, err
 	}
+
 	return images, nil
 }
 

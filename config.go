@@ -7,15 +7,16 @@ import (
 )
 
 type Config struct {
-	Port        int            `json:"port"`
-	Env         string         `json:"env"`
-	HMACKey     string         `json:"hmac_key"`
-	Pepper      string         `json:"pepper"`
-	Database    PostgresConfig `json:"database"`
-	Mailgun     MailgunConfig  `json:"mailgun"`
-	RootPath    string         `json:"root_path"`
-	AWSConfig   AWSConfig      `json:"aws_config"`
-	StorageType string         `json:"storage_type"`
+	Port           int            `json:"port"`
+	Env            string         `json:"env"`
+	HMACKey        string         `json:"hmac_key"`
+	Pepper         string         `json:"pepper"`
+	Database       PostgresConfig `json:"database"`
+	Mailgun        MailgunConfig  `json:"mailgun"`
+	RootPath       string         `json:"root_path"`
+	AWSConfig      AWSConfig      `json:"aws_config"`
+	StorageType    string         `json:"storage_type"`
+	ImageCDNDomain string         `json:"image_cdn_domain"`
 }
 
 type MailgunConfig struct {
