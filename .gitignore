@@ -7,3 +7,4 @@ images/*
 vendor/
 !vendor/vendor.json
 *DS_Store
+./scripts/release.sh
